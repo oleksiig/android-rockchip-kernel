@@ -102,17 +102,16 @@ static int v4l2_async_match_notify(struct v4l2_async_notifier *notifier,
 {
 	int ret;
 
+	ret = v4l2_device_register_subdev(notifier->v4l2_dev, sd);
+	if (ret < 0)
+		return ret;
+
 	if (notifier->bound) {
 		ret = notifier->bound(notifier, sd, asd);
-		if (ret < 0)
+		if (ret < 0) {
+			v4l2_device_unregister_subdev(sd);
 			return ret;
-	}
-
-	ret = v4l2_device_register_subdev(notifier->v4l2_dev, sd);
-	if (ret < 0) {
-		if (notifier->unbind)
-			notifier->unbind(notifier, sd, asd);
-		return ret;
+		}
 	}
 
 	/* Remove from the waiting list */
