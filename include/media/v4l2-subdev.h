@@ -824,6 +824,12 @@ struct v4l2_subdev {
 	struct v4l2_async_subdev *asd;
 	struct v4l2_async_notifier *notifier;
 	struct v4l2_subdev_platform_data *pdata;
+
+	/* common part of subdevice platform data */
+	struct v4l2_async_notifier *subdev_notifier;
+	/* A sub-device notifier implicitly registered for the sub-device
+	   using v4l2_device_register_sensor_subdev(). */
+
 };
 
 #define media_entity_to_v4l2_subdev(ent)				\
