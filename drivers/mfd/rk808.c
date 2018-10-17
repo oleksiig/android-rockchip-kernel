@@ -163,8 +163,9 @@ static const struct rk808_reg_data rk808_pre_init_reg[] = {
 	{ RK808_BUCK1_CONFIG_REG, BUCK1_RATE_MASK,  BUCK_ILMIN_200MA },
 	{ RK808_BUCK2_CONFIG_REG, BUCK2_RATE_MASK,  BUCK_ILMIN_200MA },
 	{ RK808_DCDC_UV_ACT_REG,  BUCK_UV_ACT_MASK, BUCK_UV_ACT_DISABLE},
-	{ RK808_VB_MON_REG,       MASK_ALL,         VB_LO_ACT |
-						    VB_LO_SEL_3500MV },
+	{ RK808_VB_MON_REG,       MASK_ALL,         VB_LO_ACT | VB_LO_SEL_3500MV },
+	/* Enable 32KHz clockout2  */
+	{ RK808_CLK32OUT_REG,	  MASK_ALL,			CLK32KOUT2_EN}
 };
 
 static const struct rk808_reg_data rk818_pre_init_reg[] = {
