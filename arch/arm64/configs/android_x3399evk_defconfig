@@ -79,7 +79,7 @@ CONFIG_SWP_EMULATION=y
 CONFIG_CP15_BARRIER_EMULATION=y
 CONFIG_SETEND_EMULATION=y
 CONFIG_RANDOMIZE_BASE=y
-CONFIG_CMDLINE="console=ttyS2,115200n8 printk.kmsg=on androidboot.selinux=permissive androidboot.hardware=x3399evk"
+CONFIG_CMDLINE="console=ttyS2,115200n8 printk.devkmsg=on androidboot.selinux=permissive androidboot.hardware=x3399evk"
 CONFIG_CMDLINE_EXTEND=y
 # CONFIG_EFI is not set
 # CONFIG_COREDUMP is not set
