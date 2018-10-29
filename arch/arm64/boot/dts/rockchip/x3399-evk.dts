@@ -52,7 +52,7 @@
 	compatible = "rockchip,x3399-evk", "rockchip,rk3399";
 
 	chosen {
-		bootargs = "earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1";
+		bootargs = "earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1 cma=256M";
 	};
 
 	/* Board input voltage */
@@ -214,6 +214,17 @@
 
 &cpu_b1 {
 	cpu-supply = <&vdd_cpu_b>;
+};
+
+&dfi {
+	status = "okay";
+};
+
+&dmc {
+	status = "okay";
+	center-supply = <&vdd_center>;
+	upthreshold = <60>;
+	downdifferential = <40>;
 };
 
 &emmc_phy {
@@ -638,17 +649,18 @@
 	status = "okay";
 };
 
-&vopl {
-	status = "okay";
-};
+//&vopl {
+//	status = "okay";
+//};
 
-&vopl_mmu {
-	status = "okay";
-};
+//&vopl_mmu {
+//	status = "okay";
+//};
 
-&vpu_mmu {
-	status = "okay";
-};
+
+//&vpu_mmu {
+//	status = "okay";
+//};
 
 /* UART -------------------------------------------------------------- */
 &uart0 {
