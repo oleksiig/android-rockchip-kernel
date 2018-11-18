@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: GPL-2.0
+
+source "drivers/video/rockchip/rga2/Kconfig"
