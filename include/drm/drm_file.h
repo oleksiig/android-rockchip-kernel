@@ -181,6 +181,12 @@ struct drm_file {
 	/** @atomic: True if client understands atomic properties. */
 	unsigned atomic:1;
 
+	/*
+	 * true if client understands share planes and
+	 * hardware support share planes.
+	 */
+	unsigned share_planes:1;
+
 	/**
 	 * @is_master:
 	 *
