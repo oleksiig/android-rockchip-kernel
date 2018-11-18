@@ -16,6 +16,8 @@
 #include <drm/drmP.h>
 #include <drm/drm_gem.h>
 #include <drm/drm_vma_manager.h>
+#include <drm/rockchip_drm.h>
+
 #include <linux/iommu.h>
 
 #include "rockchip_drm_drv.h"
@@ -398,6 +400,30 @@ err_handle_create:
 	return ERR_PTR(ret);
 }
 
+int rockchip_gem_dumb_map_offset(struct drm_file *file_priv,
+				 struct drm_device *dev, uint32_t handle,
+				 uint64_t *offset)
+{
+	struct drm_gem_object *obj;
+	int ret;
+
+	obj = drm_gem_object_lookup(file_priv, handle);
+	if (!obj) {
+		DRM_ERROR("failed to lookup gem object.\n");
+		return -EINVAL;
+	}
+
+	ret = drm_gem_create_mmap_offset(obj);
+	if (ret)
+		goto out;
+
+	*offset = drm_vma_node_offset_addr(&obj->vma_node);
+out:
+	drm_gem_object_unreference_unlocked(obj);
+
+	return 0;
+}
+
 /*
  * rockchip_gem_dumb_create - (struct drm_driver)->dumb_create callback
  * function
@@ -421,6 +447,29 @@ int rockchip_gem_dumb_create(struct drm_file *file_priv,
 	rk_obj = rockchip_gem_create_with_handle(file_priv, dev, args->size,
 						 &args->handle);
 
+	return PTR_ERR_OR_ZERO(rk_obj);
+}
+
+int rockchip_gem_map_offset_ioctl(struct drm_device *drm, void *data,
+				  struct drm_file *file_priv)
+{
+	struct drm_rockchip_gem_map_off *args = data;
+
+	int err = rockchip_gem_dumb_map_offset(file_priv, drm, args->handle,
+					    &args->offset);
+					 
+	printk("rockchip_gem_map_offset_ioctl: offset = 0x%llx\n", args->offset);
+	return err;
+}
+
+int rockchip_gem_create_ioctl(struct drm_device *dev, void *data,
+			      struct drm_file *file_priv)
+{
+	struct drm_rockchip_gem_create *args = data;
+	struct rockchip_gem_object *rk_obj;
+
+	rk_obj = rockchip_gem_create_with_handle(file_priv, dev, args->size,
+						 &args->handle);
 	return PTR_ERR_OR_ZERO(rk_obj);
 }
 
