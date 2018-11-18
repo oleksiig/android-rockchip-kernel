@@ -202,6 +202,8 @@ void rockchip_drm_mode_config_init(struct drm_device *dev)
 	dev->mode_config.min_width = 0;
 	dev->mode_config.min_height = 0;
 
+	dev->mode_config.allow_fb_modifiers = true;
+
 	/*
 	 * set max width and height as default value(4096x4096).
 	 * this value would be used to check framebuffer size limitation
