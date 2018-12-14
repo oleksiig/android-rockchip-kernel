@@ -423,14 +423,27 @@ static void dw8250_setup_port(struct uart_port *p)
 		reg = ioread32be(p->membase + DW_UART_CPR);
 	else
 		reg = readl(p->membase + DW_UART_CPR);
+
+#ifdef CONFIG_ARCH_ROCKCHIP
+	/*
+	 * The UART CPR may be 0 of some rockchip soc,
+	 * but it supports fifo and AFC, fifo entry is 32 default.
+	 */
+	if (reg == 0)
+		reg = 0x00023ff2;
+#else
 	if (!reg)
 		return;
+#endif
 
 	/* Select the type based on fifo */
 	if (reg & DW_UART_CPR_FIFO_MODE) {
 		p->type = PORT_16550A;
 		p->flags |= UPF_FIXED_TYPE;
 		p->fifosize = DW_UART_CPR_FIFO_SIZE(reg);
+#ifdef CONFIG_ARCH_ROCKCHIP
+		up->tx_loadsz = p->fifosize * 3 / 4;
+#endif
 		up->capabilities = UART_CAP_FIFO;
 	}
 
