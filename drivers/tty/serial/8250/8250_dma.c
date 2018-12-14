@@ -15,6 +15,12 @@
 
 #include "8250.h"
 
+#ifdef CONFIG_ARCH_ROCKCHIP
+#define MAX_TX_BYTES		64
+#define MAX_FIFO_SIZE		64
+#define UART_RFL_16550A		0x21
+#endif
+
 static void __dma_tx_complete(void *param)
 {
 	struct uart_8250_port	*p = param;
@@ -46,6 +52,39 @@ static void __dma_tx_complete(void *param)
 	spin_unlock_irqrestore(&p->port.lock, flags);
 }
 
+#ifdef CONFIG_ARCH_ROCKCHIP
+
+static void __dma_rx_complete(void *param)
+{
+	struct uart_8250_port	*p = param;
+	struct uart_8250_dma	*dma = p->dma;
+	struct tty_port		*tty_port = &p->port.state->port;
+	struct dma_tx_state	state;
+	unsigned int		count = 0, cur_index = 0;
+
+	dmaengine_tx_status(dma->rxchan, dma->rx_cookie, &state);
+	cur_index = dma->rx_size - state.residue;
+
+	if (cur_index == dma->rx_index)
+		return;
+	else if (cur_index > dma->rx_index)
+		count = cur_index - dma->rx_index;
+	else
+		count = dma->rx_size - dma->rx_index;
+
+	tty_insert_flip_string(tty_port, dma->rx_buf + dma->rx_index, count);
+
+	if (cur_index < dma->rx_index) {
+		tty_insert_flip_string(tty_port, dma->rx_buf, cur_index);
+		count += cur_index;
+	}
+
+	p->port.icount.rx += count;
+	dma->rx_index = cur_index;
+}
+
+#else
+
 static void __dma_rx_complete(void *param)
 {
 	struct uart_8250_port	*p = param;
@@ -65,12 +104,14 @@ static void __dma_rx_complete(void *param)
 	tty_flip_buffer_push(tty_port);
 }
 
+#endif
+
 int serial8250_tx_dma(struct uart_8250_port *p)
 {
 	struct uart_8250_dma		*dma = p->dma;
 	struct circ_buf			*xmit = &p->port.state->xmit;
 	struct dma_async_tx_descriptor	*desc;
-	int ret;
+	int ret = 0;
 
 	if (dma->tx_running)
 		return 0;
@@ -82,6 +123,13 @@ int serial8250_tx_dma(struct uart_8250_port *p)
 	}
 
 	dma->tx_size = CIRC_CNT_TO_END(xmit->head, xmit->tail, UART_XMIT_SIZE);
+
+#ifdef CONFIG_ARCH_ROCKCHIP
+	if (dma->tx_size < MAX_TX_BYTES) {
+		ret = -EBUSY;
+		goto err;
+	}
+#endif
 
 	desc = dmaengine_prep_slave_single(dma->txchan,
 					   dma->tx_addr + xmit->tail,
@@ -136,7 +184,9 @@ int serial8250_rx_dma(struct uart_8250_port *p)
 	dma->rx_cookie = dmaengine_submit(desc);
 
 	dma_async_issue_pending(dma->rxchan);
-
+#ifdef CONFIG_ARCH_ROCKCHIP
+	dma->rx_index = 0;
+#endif
 	return 0;
 }
 
@@ -168,9 +218,20 @@ int serial8250_request_dma(struct uart_8250_port *p)
 	dma->rxconf.src_addr_width	= DMA_SLAVE_BUSWIDTH_1_BYTE;
 	dma->rxconf.src_addr		= rx_dma_addr + UART_RX;
 
+#ifdef CONFIG_ARCH_ROCKCHIP
+	if ((p->port.fifosize / 4) < 16)
+		dma->rxconf.src_maxburst = p->port.fifosize / 4;
+	else
+		dma->rxconf.src_maxburst = 16;
+#endif
+
 	dma->txconf.direction		= DMA_MEM_TO_DEV;
 	dma->txconf.dst_addr_width	= DMA_SLAVE_BUSWIDTH_1_BYTE;
 	dma->txconf.dst_addr		= tx_dma_addr + UART_TX;
+
+#ifdef CONFIG_ARCH_ROCKCHIP
+	dma->txconf.dst_maxburst	= 16;
+#endif
 
 	dma_cap_zero(mask);
 	dma_cap_set(DMA_SLAVE, mask);
@@ -215,9 +276,13 @@ int serial8250_request_dma(struct uart_8250_port *p)
 	dmaengine_slave_config(dma->txchan, &dma->txconf);
 
 	/* RX buffer */
+#ifdef CONFIG_ARCH_ROCKCHIP
+	if (!dma->rx_size)
+		dma->rx_size = PAGE_SIZE * 2;
+#else
 	if (!dma->rx_size)
 		dma->rx_size = PAGE_SIZE;
-
+#endif
 	dma->rx_buf = dma_alloc_coherent(dma->rxchan->device->dev, dma->rx_size,
 					&dma->rx_addr, GFP_KERNEL);
 	if (!dma->rx_buf) {
@@ -238,7 +303,6 @@ int serial8250_request_dma(struct uart_8250_port *p)
 	}
 
 	dev_dbg_ratelimited(p->port.dev, "got both dma channels\n");
-
 	return 0;
 err:
 	dma_release_channel(dma->txchan);
