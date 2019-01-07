@@ -834,6 +834,10 @@
         dsi,format = <MIPI_DSI_FMT_RGB888>;
         dsi,lanes = <4>;
 
+        display-width = <176>;
+        display-height = <99>;
+        display-bpc = <8>;
+
         display-timings {
             native-mode = <&timing0>;
             timing0: timing0 {

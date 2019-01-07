@@ -168,6 +168,7 @@ static int panel_simple_of_get_native_mode(struct panel_simple *panel)
 	struct drm_display_mode *mode;
 	struct device_node *timings_np;
 	int ret;
+	u32 val;
 
 	timings_np = of_get_child_by_name(panel->dev->of_node,
 					  "display-timings");
@@ -189,9 +190,17 @@ static int panel_simple_of_get_native_mode(struct panel_simple *panel)
 		return 0;
 	}
 
-	drm_mode_set_name(mode);
 	mode->type |= DRM_MODE_TYPE_PREFERRED;
+
+	drm_mode_set_name(mode);
 	drm_mode_probed_add(connector, mode);
+
+	if (!of_property_read_u32(panel->dev->of_node, "display-width", &val))
+		connector->display_info.width_mm = val;
+	if (!of_property_read_u32(panel->dev->of_node, "display-height", &val))
+		connector->display_info.height_mm = val;
+	if (!of_property_read_u32(panel->dev->of_node, "display-bpc", &val))
+		connector->display_info.bpc = val;
 
 	return 1;
 }
