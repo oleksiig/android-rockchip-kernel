@@ -1656,6 +1656,8 @@
 		power-domains = <&power RK3399_PD_VIO>;
 		rockchip,grf = <&grf>;
 		status = "disabled";
+		#address-cells = <1>;
+		#size-cells = <0>;
 
 		ports {
 			mipi_in: port {
