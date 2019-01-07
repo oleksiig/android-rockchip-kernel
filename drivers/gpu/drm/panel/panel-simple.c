@@ -34,6 +34,7 @@
 #include <drm/drm_panel.h>
 
 #include <video/display_timing.h>
+#include <video/of_display_timing.h>
 #include <video/videomode.h>
 
 struct panel_desc {
@@ -80,6 +81,7 @@ struct panel_simple {
 	bool prepared;
 	bool enabled;
 
+	struct device *dev;
 	const struct panel_desc *desc;
 
 	struct backlight_device *backlight;
@@ -157,6 +159,41 @@ static int panel_simple_get_fixed_modes(struct panel_simple *panel)
 	connector->display_info.bus_flags = panel->desc->bus_flags;
 
 	return num;
+}
+
+static int panel_simple_of_get_native_mode(struct panel_simple *panel)
+{
+	struct drm_connector *connector = panel->base.connector;
+	struct drm_device *drm = panel->base.drm;
+	struct drm_display_mode *mode;
+	struct device_node *timings_np;
+	int ret;
+
+	timings_np = of_get_child_by_name(panel->dev->of_node,
+					  "display-timings");
+	if (!timings_np) {
+		dev_dbg(panel->dev, "failed to find display-timings node\n");
+		return 0;
+	}
+
+	of_node_put(timings_np);
+	mode = drm_mode_create(drm);
+	if (!mode)
+		return 0;
+
+	ret = of_get_drm_display_mode(panel->dev->of_node, mode,
+						 NULL, OF_USE_NATIVE_MODE);
+	if (ret) {
+		dev_dbg(panel->dev, "failed to find dts display timings\n");
+		drm_mode_destroy(drm, mode);
+		return 0;
+	}
+
+	drm_mode_set_name(mode);
+	mode->type |= DRM_MODE_TYPE_PREFERRED;
+	drm_mode_probed_add(connector, mode);
+
+	return 1;
 }
 
 static int panel_simple_disable(struct drm_panel *panel)
@@ -251,6 +288,12 @@ static int panel_simple_get_modes(struct drm_panel *panel)
 	struct panel_simple *p = to_panel_simple(panel);
 	int num = 0;
 
+	/* add device node plane modes */
+	num += panel_simple_of_get_native_mode(p);
+
+	/* add hard-coded panel modes */
+	num += panel_simple_get_fixed_modes(p);
+
 	/* probe EDID if a DDC bus is available */
 	if (p->ddc) {
 		struct edid *edid = drm_get_edid(panel->connector, p->ddc);
@@ -260,9 +303,6 @@ static int panel_simple_get_modes(struct drm_panel *panel)
 			kfree(edid);
 		}
 	}
-
-	/* add hard-coded panel modes */
-	num += panel_simple_get_fixed_modes(p);
 
 	return num;
 }
@@ -297,22 +337,40 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
 {
 	struct device_node *backlight, *ddc;
 	struct panel_simple *panel;
+	struct panel_desc *of_desc;
+	u32 val;
 	int err;
 
 	panel = devm_kzalloc(dev, sizeof(*panel), GFP_KERNEL);
 	if (!panel)
 		return -ENOMEM;
 
+	if (!desc)
+		of_desc = devm_kzalloc(dev, sizeof(*of_desc), GFP_KERNEL);
+	else
+		of_desc = devm_kmemdup(dev, desc, sizeof(*of_desc), GFP_KERNEL);
+
+	if (!of_property_read_u32(dev->of_node, "bus-format", &val))
+		of_desc->bus_format = val;
+	if (!of_property_read_u32(dev->of_node, "delay,prepare", &val))
+		of_desc->delay.prepare = val;
+	if (!of_property_read_u32(dev->of_node, "delay,enable", &val))
+		of_desc->delay.enable = val;
+	if (!of_property_read_u32(dev->of_node, "delay,disable", &val))
+		of_desc->delay.disable = val;
+	if (!of_property_read_u32(dev->of_node, "delay,unprepare", &val))
+		of_desc->delay.unprepare = val;
+
 	panel->enabled = false;
 	panel->prepared = false;
-	panel->desc = desc;
+	panel->desc = of_desc;
+	panel->dev = dev;
 
 	panel->supply = devm_regulator_get(dev, "power");
 	if (IS_ERR(panel->supply))
 		return PTR_ERR(panel->supply);
 
-	panel->enable_gpio = devm_gpiod_get_optional(dev, "enable",
-						     GPIOD_OUT_LOW);
+	panel->enable_gpio = devm_gpiod_get_optional(dev, "enable", 0);
 	if (IS_ERR(panel->enable_gpio)) {
 		err = PTR_ERR(panel->enable_gpio);
 		dev_err(dev, "failed to request GPIO: %d\n", err);
@@ -2331,6 +2389,9 @@ static const struct panel_desc_dsi panasonic_vvx10f004b00 = {
 
 static const struct of_device_id dsi_of_match[] = {
 	{
+		.compatible = "simple-panel-dsi",
+		.data = NULL
+	}, {
 		.compatible = "auo,b080uan01",
 		.data = &auo_b080uan01
 	}, {
@@ -2355,6 +2416,8 @@ static int panel_simple_dsi_probe(struct mipi_dsi_device *dsi)
 {
 	const struct panel_desc_dsi *desc;
 	const struct of_device_id *id;
+	const struct panel_desc *pdesc;
+	u32 val;
 	int err;
 
 	id = of_match_node(dsi_of_match, dsi->dev.of_node);
@@ -2363,13 +2426,27 @@ static int panel_simple_dsi_probe(struct mipi_dsi_device *dsi)
 
 	desc = id->data;
 
-	err = panel_simple_probe(&dsi->dev, &desc->desc);
+	if (desc) {
+		dsi->mode_flags = desc->flags;
+		dsi->format = desc->format;
+		dsi->lanes = desc->lanes;
+		pdesc = &desc->desc;
+	} else {
+		pdesc = NULL;
+	}
+
+	err = panel_simple_probe(&dsi->dev, pdesc);
 	if (err < 0)
 		return err;
 
-	dsi->mode_flags = desc->flags;
-	dsi->format = desc->format;
-	dsi->lanes = desc->lanes;
+	if (!of_property_read_u32(dsi->dev.of_node, "dsi,flags", &val))
+		dsi->mode_flags = val;
+
+	if (!of_property_read_u32(dsi->dev.of_node, "dsi,format", &val))
+		dsi->format = val;
+
+	if (!of_property_read_u32(dsi->dev.of_node, "dsi,lanes", &val))
+		dsi->lanes = val;
 
 	err = mipi_dsi_attach(dsi);
 	if (err) {
