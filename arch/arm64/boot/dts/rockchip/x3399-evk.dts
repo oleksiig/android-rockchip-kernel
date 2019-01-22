@@ -111,16 +111,16 @@
     vdd_log: vdd-log {
         compatible = "pwm-regulator";
         pwms = <&pwm2 0 25000 1>;
-        regulator-name = "VDD_LOG";
+        regulator-name = "VDD_LOGIC";
         regulator-always-on;
         regulator-boot-on;
         regulator-min-microvolt = <800000>;
-        regulator-max-microvolt = <1400000>;
+        regulator-max-microvolt = <1000000>;
         vin-supply = <&vcc3v3_sys>;
 
         /* for rockchip boot on */
         rockchip,pwm_id= <2>;
-        rockchip,pwm_voltage = <1000000>;
+        rockchip,pwm_voltage = <900000>;
     };
 
     wlan_en_reg: fixedregulator@2 {
@@ -424,8 +424,8 @@
                 regulator-name = "VDD_CENTER";
                 regulator-always-on;
                 regulator-boot-on;
-                regulator-min-microvolt = <750000>;
-                regulator-max-microvolt = <1350000>;
+                regulator-min-microvolt = <800000>;
+                regulator-max-microvolt = <1000000>;
                 regulator-ramp-delay = <6001>;
                 regulator-state-mem {
                     regulator-off-in-suspend;
@@ -436,8 +436,8 @@
                 regulator-name = "VDD_CPU_L";
                 regulator-always-on;
                 regulator-boot-on;
-                regulator-min-microvolt = <750000>;
-                regulator-max-microvolt = <1350000>;
+                regulator-min-microvolt = <800000>;
+                regulator-max-microvolt = <1200000>;
                 regulator-ramp-delay = <6001>;
                 regulator-state-mem {
                     regulator-off-in-suspend;
@@ -582,8 +582,8 @@
         reg = <0x40>;
         fcs,suspend-voltage-selector = <1>;
         regulator-name = "VDD_CPU_B";
-        regulator-min-microvolt = <712500>;
-        regulator-max-microvolt = <1500000>;
+        regulator-min-microvolt = <800000>;
+        regulator-max-microvolt = <1250000>;
         regulator-ramp-delay = <1000>;
         regulator-always-on;
         regulator-boot-on;
@@ -599,8 +599,8 @@
         reg = <0x41>;
         fcs,suspend-voltage-selector = <1>;
         regulator-name = "VDD_GPU";
-        regulator-min-microvolt = <712500>;
-        regulator-max-microvolt = <1500000>;
+        regulator-min-microvolt = <800000>;
+        regulator-max-microvolt = <1200000>;
         regulator-ramp-delay = <1000>;
         regulator-always-on;
         regulator-boot-on;
