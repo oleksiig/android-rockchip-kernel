@@ -455,11 +455,8 @@ int rockchip_gem_map_offset_ioctl(struct drm_device *drm, void *data,
 {
 	struct drm_rockchip_gem_map_off *args = data;
 
-	int err = rockchip_gem_dumb_map_offset(file_priv, drm, args->handle,
+	return rockchip_gem_dumb_map_offset(file_priv, drm, args->handle,
 					    &args->offset);
-					 
-	printk("rockchip_gem_map_offset_ioctl: offset = 0x%llx\n", args->offset);
-	return err;
 }
 
 int rockchip_gem_create_ioctl(struct drm_device *dev, void *data,
