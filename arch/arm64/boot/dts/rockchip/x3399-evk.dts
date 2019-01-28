@@ -376,16 +376,17 @@
 
 &pmu_io_domains {
     status = "okay";
-    pmu1830-supply = <&vcc_1v8>;
+
+    pmu1830-supply = <&vcc_1v8>;        /* PMUIO2_VDD */
 };
 
 &io_domains {
     status = "okay";
 
-    bt656-supply = <&vcc_1v8>;
-    audio-supply = <&vcca1v8_codec>;
-    sdmmc-supply = <&vcc3v0_sd_slot>;
-    gpio1830-supply = <&vcc_3v0>;
+    bt656-supply = <&vcc_1v8>;          /* APIO2_VDD */
+    audio-supply = <&vcca1v8_codec>;    /* APIO5_VDD */
+    sdmmc-supply = <&vcc3v0_sd_slot>;   /* SDMMC0_VDD */
+    gpio1830-supply = <&vcc_3v0>;       /* APIO4_VDD */
 };
 
 &i2c0 {
