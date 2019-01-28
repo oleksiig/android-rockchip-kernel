@@ -613,9 +613,14 @@
     };
 };
 
-&i2c1 {
+&i2c3 {
     status = "okay";
-    clock-frequency = <400000>;
+};
+
+&i2c4 {
+    status = "okay";
+	i2c-scl-rising-time-ns = <800>;
+	i2c-scl-falling-time-ns = <100>;
 
     sn65dsi83: dsi-lvds@2c {
         compatible = "ti,sn65dsi83";
@@ -626,15 +631,6 @@
         enable-gpios = <&gpio2 RK_PD2 GPIO_ACTIVE_HIGH>;
         dsi-host = <&mipi_dsi>;
     };
-};
-
-&i2c3 {
-    status = "okay";
-};
-
-&i2c4 {
-    status = "okay";
-    clock-frequency = <400000>;
 };
 
 &i2c5 {
