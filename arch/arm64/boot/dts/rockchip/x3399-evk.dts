@@ -631,6 +631,15 @@
         enable-gpios = <&gpio2 RK_PD2 GPIO_ACTIVE_HIGH>;
         dsi-host = <&mipi_dsi>;
     };
+
+    gt911@5d {
+        compatible = "goodix,gt911";
+        reg = <0x5d>;
+        interrupt-parent = <&gpio4>;
+        interrupts = <RK_PD2 IRQ_TYPE_EDGE_RISING>;
+        irq-gpios = <&gpio4 RK_PD2 GPIO_ACTIVE_HIGH>;
+        reset-gpios = <&gpio4 RK_PD5 GPIO_ACTIVE_LOW>;
+    };
 };
 
 &i2c5 {
