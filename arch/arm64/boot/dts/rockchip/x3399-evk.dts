@@ -53,7 +53,7 @@
     compatible = "rockchip,x3399-evk", "rockchip,rk3399";
 
     chosen {
-        bootargs = "earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1 cma=256M";
+        bootargs = "earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1";
     };
 
     /* Board input voltage */
