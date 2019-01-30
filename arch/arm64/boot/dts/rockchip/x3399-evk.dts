@@ -812,7 +812,7 @@
     status = "okay";
 
     pinctrl-names = "default";
-    pinctrl-0 = <&i2s0_2ch_bus>;
+    pinctrl-0 = <&i2s0_8ch_bus>;
 
     rockchip,playback-channels = <2>;
     rockchip,capture-channels = <2>;
