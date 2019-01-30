@@ -229,12 +229,19 @@
     };
 
 /* ------------------------------------------------------------------ */
+    tlv320aic23_osc: tlv320aic23_osc {
+        compatible = "fixed-clock";
+        clock-frequency = <12288000>;
+        clock-output-names = "tlv320aic23";
+        #clock-cells = <0>;
+    };
+
     tlv320aic23_sound {
         compatible = "simple-audio-card";
         simple-audio-card,name = "tlv320aic23";
         simple-audio-card,format = "i2s";
-        simple-audio-card,frame-master = <&codec_master>;
-        simple-audio-card,bitclock-master = <&codec_master>;
+        simple-audio-card,frame-master = <&clock_master>;
+        simple-audio-card,bitclock-master = <&clock_master>;
 
         simple-audio-card,widgets =
             "Microphone", "Mic Jack",
@@ -245,10 +252,9 @@
             "Headphone Jack", "LHPOUT",
             "Headphone Jack", "RHPOUT";
 
-        codec_master: simple-audio-card,codec {
+        clock_master: simple-audio-card,codec {
             sound-dai = <&tlv320aic23>;
-            system-clock-frequency = <12288000>;
-            system-clock-direction-out = <1>;
+            clocks = <&tlv320aic23_osc>;
         };
 
         simple-audio-card,cpu {
