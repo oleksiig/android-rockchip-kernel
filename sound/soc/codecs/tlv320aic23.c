@@ -489,7 +489,7 @@ static int tlv320aic23_set_bias_level(struct snd_soc_codec *codec,
 	case SND_SOC_BIAS_ON:
 		/* vref/mid, osc on, dac unmute */
 		reg &= ~(TLV320AIC23_DEVICE_PWR_OFF | TLV320AIC23_OSC_OFF | \
-			TLV320AIC23_DAC_OFF);
+			TLV320AIC23_DAC_OFF | TLV320AIC23_CLK_OFF);
 		snd_soc_write(codec, TLV320AIC23_PWR, reg);
 		break;
 	case SND_SOC_BIAS_PREPARE:
