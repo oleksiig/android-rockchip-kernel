@@ -164,6 +164,10 @@ void kbase_mmu_interrupt(struct kbase_device *kbdev, u32 irq_stat)
 		 * the MMU is updated
 		 */
 		kctx = kbasep_js_runpool_lookup_ctx(kbdev, as_no);
+		if (!kctx) {
+			pr_err("fail to lookup ctx, to break out.");
+			break;
+		}
 
 
 		/* find faulting address */
