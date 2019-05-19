@@ -170,6 +170,23 @@ static void kbase_pm_invoke(struct kbase_device *kbdev,
 
 	lockdep_assert_held(&kbdev->hwaccess_lock);
 
+	/*-------------------------------------------------------*/
+
+	if ((KBASE_PM_CORE_L2 == core_type) && (ACTION_PWROFF == action)) {
+		pr_info("not to power off l2 actually.");
+		return;
+	}
+	if ((KBASE_PM_CORE_SHADER == core_type) && (ACTION_PWROFF  == action)) {
+		pr_info("not to power off shader actually. cores_lo : 0x%x, hi : 0x%x.", lo, hi);
+		return;
+	}
+	if ((KBASE_PM_CORE_TILER == core_type) && (ACTION_PWROFF  == action)) {
+		pr_info("not to power off tiler actually.");
+		return;
+	}
+
+	/*-------------------------------------------------------*/
+
 	reg = core_type_to_reg(core_type, action);
 
 	KBASE_DEBUG_ASSERT(reg);
