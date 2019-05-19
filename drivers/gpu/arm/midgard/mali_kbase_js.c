@@ -1245,6 +1245,7 @@ bool kbasep_js_runpool_retain_ctx(struct kbase_device *kbdev,
 struct kbase_context *kbasep_js_runpool_lookup_ctx(struct kbase_device *kbdev,
 		int as_nr)
 {
+	int ret = 0;
 	unsigned long flags;
 	struct kbasep_js_device_data *js_devdata;
 	struct kbase_context *found_kctx = NULL;
@@ -1257,8 +1258,13 @@ struct kbase_context *kbasep_js_runpool_lookup_ctx(struct kbase_device *kbdev,
 
 	found_kctx = kbdev->as_to_kctx[as_nr];
 
-	if (found_kctx != NULL)
-		kbase_ctx_sched_retain_ctx_refcount(found_kctx);
+	if (found_kctx != NULL) {
+		ret = kbase_ctx_sched_retain_ctx_refcount(found_kctx);
+		if (ret != 0) {
+			pr_err("fail to retain ctx_refcount, ret : %d.", ret);
+			found_kctx = NULL;
+		}
+	}
 
 	spin_unlock_irqrestore(&kbdev->hwaccess_lock, flags);
 
