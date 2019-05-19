@@ -88,7 +88,7 @@ int kbase_ctx_sched_retain_ctx(struct kbase_context *kctx);
  *
  * The kbase_device::hwaccess_lock must be held whilst calling this function
  */
-void kbase_ctx_sched_retain_ctx_refcount(struct kbase_context *kctx);
+int kbase_ctx_sched_retain_ctx_refcount(struct kbase_context *kctx);
 
 /* kbase_ctx_sched_release_ctx - Release a reference to the @ref kbase_context
  *
