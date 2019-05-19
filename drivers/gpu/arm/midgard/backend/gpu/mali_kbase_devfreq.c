@@ -89,12 +89,13 @@ kbase_devfreq_target(struct device *dev, unsigned long *target_freq, u32 flags)
 
 	rcu_read_lock();
 	opp = devfreq_recommended_opp(dev, &freq, flags);
-	voltage = dev_pm_opp_get_voltage(opp);
-	rcu_read_unlock();
-	if (IS_ERR_OR_NULL(opp)) {
+	if (IS_ERR(opp)) {
+		rcu_read_unlock();
 		dev_err(dev, "Failed to get opp (%ld)\n", PTR_ERR(opp));
 		return PTR_ERR(opp);
 	}
+	voltage = dev_pm_opp_get_voltage(opp);
+	rcu_read_unlock();
 
 	nominal_freq = freq;
 
