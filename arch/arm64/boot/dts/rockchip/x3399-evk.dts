@@ -47,7 +47,7 @@
 
 #include "rk3399.dtsi"
 #include "rk3399-opp.dtsi"
-#include "android-fstab-sdcard.dtsi"
+#include "android-fstab-emmc.dtsi"
 
 / {
     model = "X3399 Evaluation Kit";
