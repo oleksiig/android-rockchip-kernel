@@ -53,10 +53,6 @@
     model = "X3399 Evaluation Kit";
     compatible = "rockchip,x3399-evk", "rockchip,rk3399";
 
-    chosen {
-        bootargs = "earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1";
-    };
-
     /* Board input voltage */
     dc_12v: dc-12v {
         compatible = "regulator-fixed";
