@@ -153,9 +153,8 @@ kbase_create_context(struct kbase_device *kbdev, bool is_compat)
 
 	mutex_init(&kctx->vinstr_cli_lock);
 
-	setup_timer(&kctx->soft_job_timeout,
-		    kbasep_soft_job_timeout_worker,
-		    (uintptr_t)kctx);
+	kbase_timer_setup(&kctx->soft_job_timeout,
+			  kbasep_soft_job_timeout_worker);
 
 	return kctx;
 
