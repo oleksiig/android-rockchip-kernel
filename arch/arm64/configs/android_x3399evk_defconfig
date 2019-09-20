@@ -76,7 +76,7 @@ CONFIG_CP15_BARRIER_EMULATION=y
 CONFIG_SETEND_EMULATION=y
 CONFIG_ARM64_SW_TTBR0_PAN=y
 CONFIG_RANDOMIZE_BASE=y
-CONFIG_CMDLINE="earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1 console=ttyS2,115200n8 skip_initramfs ro root=/dev/dm-0 rootwait init=/init dm=\"system none ro,0 1 android-verity PARTUUID=CF16C17A-7935-421F-80AC-BD870520E000\""
+CONFIG_CMDLINE="earlycon=uart8250,mmio32,0xff1a0000 swiotlb=1 console=ttyS2,115200n8 skip_initramfs root=/dev/dm-0 rootwait init=/init"
 CONFIG_CMDLINE_EXTEND=y
 # CONFIG_EFI is not set
 # CONFIG_COREDUMP is not set
