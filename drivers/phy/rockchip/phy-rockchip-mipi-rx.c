@@ -46,6 +46,7 @@
 #include <media/v4l2-ctrls.h>
 #include <media/v4l2-fwnode.h>
 #include <media/v4l2-subdev.h>
+#include <media/v4l2-async.h>
 
 #define RK1808_GRF_PD_VI_CON_OFFSET	0x0430
 
@@ -1323,8 +1324,7 @@ rockchip_mipidphy_notifier_bound(struct v4l2_async_notifier *notifier,
 		return -ENXIO;
 	}
 
-	ret = media_entity_create_link(
-			&sensor->sd->entity, pad,
+	ret = media_create_pad_link(&sensor->sd->entity, pad,
 			&priv->sd.entity, MIPI_DPHY_RX_PAD_SINK,
 			priv->num_sensors != 1 ? 0 : MEDIA_LNK_FL_ENABLED);
 	if (ret) {
@@ -1350,12 +1350,6 @@ rockchip_mipidphy_notifier_unbind(struct v4l2_async_notifier *notifier,
 
 	sensor->sd = NULL;
 }
-
-static const struct
-v4l2_async_notifier_operations rockchip_mipidphy_async_ops = {
-	.bound = rockchip_mipidphy_notifier_bound,
-	.unbind = rockchip_mipidphy_notifier_unbind,
-};
 
 static int rockchip_mipidphy_fwnode_parse(struct device *dev,
 					  struct v4l2_fwnode_endpoint *vep,
@@ -1408,8 +1402,8 @@ static int rockchip_mipidphy_media_init(struct mipidphy_priv *priv)
 	priv->pads[MIPI_DPHY_RX_PAD_SINK].flags =
 		MEDIA_PAD_FL_SINK | MEDIA_PAD_FL_MUST_CONNECT;
 
-	ret = media_entity_init(&priv->sd.entity,
-				MIPI_DPHY_RX_PADS_NUM, priv->pads, 0);
+	ret = media_entity_pads_init(&priv->sd.entity,
+				MIPI_DPHY_RX_PADS_NUM, priv->pads);
 	if (ret < 0)
 		return ret;
 
@@ -1423,9 +1417,10 @@ static int rockchip_mipidphy_media_init(struct mipidphy_priv *priv)
 	if (!priv->notifier.num_subdevs)
 		return -ENODEV;	/* no endpoint */
 
-	priv->sd.subdev_notifier = &priv->notifier;
-	priv->notifier.ops = &rockchip_mipidphy_async_ops;
-	ret = v4l2_async_subdev_notifier_register(&priv->sd, &priv->notifier);
+	priv->sd.notifier = &priv->notifier;
+	priv->notifier.bound = rockchip_mipidphy_notifier_bound;
+	priv->notifier.unbind = rockchip_mipidphy_notifier_unbind;
+	ret = v4l2_async_notifier_register(priv->sd.v4l2_dev, &priv->notifier);
 	if (ret) {
 		dev_err(priv->dev,
 			"failed to register async notifier : %d\n", ret);
