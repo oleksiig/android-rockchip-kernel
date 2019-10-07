@@ -32,6 +32,7 @@
  * SOFTWARE.
  */
 
+#include <linux/videodev2.h>
 #include <media/v4l2-common.h>
 #include <media/v4l2-ioctl.h>
 #include <media/videobuf2-core.h>
@@ -2433,23 +2434,20 @@ static const struct v4l2_ioctl_ops rkisp1_params_ioctl = {
 	.vidioc_expbuf = vb2_ioctl_expbuf,
 	.vidioc_streamon = vb2_ioctl_streamon,
 	.vidioc_streamoff = vb2_ioctl_streamoff,
-	.vidioc_enum_fmt_meta_out = rkisp1_params_enum_fmt_meta_out,
-	.vidioc_g_fmt_meta_out = rkisp1_params_g_fmt_meta_out,
-	.vidioc_s_fmt_meta_out = rkisp1_params_g_fmt_meta_out,
-	.vidioc_try_fmt_meta_out = rkisp1_params_g_fmt_meta_out,
+	.vidioc_enum_fmt_meta_cap = rkisp1_params_enum_fmt_meta_out,
+	.vidioc_g_fmt_meta_cap = rkisp1_params_g_fmt_meta_out,
+	.vidioc_s_fmt_meta_cap = rkisp1_params_g_fmt_meta_out,
+	.vidioc_try_fmt_meta_cap = rkisp1_params_g_fmt_meta_out,
 	.vidioc_querycap = rkisp1_params_querycap,
 	.vidioc_subscribe_event = rkisp1_params_subs_evt,
 	.vidioc_unsubscribe_event = v4l2_event_unsubscribe
 };
 
-static int rkisp1_params_vb2_queue_setup(struct vb2_queue *vq,
-					 const void *parg,
-					 unsigned int *num_buffers,
-					 unsigned int *num_planes,
-					 unsigned int sizes[],
-					 void *alloc_ctxs[])
+static int rkisp1_params_vb2_queue_setup(struct vb2_queue *queue,
+			unsigned int *num_buffers, unsigned int *num_planes,
+			unsigned int sizes[], struct device *alloc_devs[])
 {
-	struct rkisp1_isp_params_vdev *params_vdev = vq->drv_priv;
+	struct rkisp1_isp_params_vdev *params_vdev = queue->drv_priv;
 
 	*num_buffers = clamp_t(u32, *num_buffers,
 			       RKISP1_ISP_PARAMS_REQ_BUFS_MIN,
@@ -2631,16 +2629,20 @@ int rkisp1_register_params_vdev(struct rkisp1_isp_params_vdev *params_vdev,
 	video_set_drvdata(vdev, params_vdev);
 
 	node->pad.flags = MEDIA_PAD_FL_SOURCE;
-	ret = media_entity_init(&vdev->entity, 1, &node->pad, 0);
+
+	ret = media_entity_pads_init(&vdev->entity, 1, &node->pad);
 	if (ret < 0)
 		goto err_release_queue;
+
 	ret = video_register_device(vdev, VFL_TYPE_GRABBER, -1);
 	if (ret < 0) {
 		dev_err(&vdev->dev,
 			"could not register Video for Linux device\n");
 		goto err_cleanup_media_entity;
 	}
+
 	return 0;
+
 err_cleanup_media_entity:
 	media_entity_cleanup(&vdev->entity);
 err_release_queue:

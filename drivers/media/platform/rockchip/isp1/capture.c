@@ -87,7 +87,7 @@
  * @xsubs: horizontal color samples in a 4*4 matrix, for yuv
  * @ysubs: vertical color samples in a 4*4 matrix, for yuv
  */
-static int fcc_xysubs(u32 fcc, u32 *xsubs, u32 *ysubs)
+int fcc_xysubs(u32 fcc, u32 *xsubs, u32 *ysubs)
 {
 	switch (fcc) {
 	case V4L2_PIX_FMT_GREY:
@@ -1127,7 +1127,7 @@ static int mi_frame_end(struct rkisp1_stream *stream)
 		}
 		stream->curr_buf->vb.sequence =
 				atomic_read(&isp_sd->frm_sync_seq) - 1;
-		stream->curr_buf->vb.timestamp = ns_to_timeval(ns);
+		stream->curr_buf->vb.vb2_buf.timestamp = ns;
 		vb2_buffer_done(&stream->curr_buf->vb.vb2_buf,
 				VB2_BUF_STATE_DONE);
 		stream->curr_buf = NULL;
@@ -1282,26 +1282,14 @@ static int rkisp1_start(struct rkisp1_stream *stream)
 }
 
 static int rkisp1_queue_setup(struct vb2_queue *queue,
-			      const void *parg,
-			      unsigned int *num_buffers,
-			      unsigned int *num_planes,
-			      unsigned int sizes[],
-			      void *alloc_ctxs[])
+			unsigned int *num_buffers, unsigned int *num_planes,
+			unsigned int sizes[], struct device *alloc_devs[])
 {
 	struct rkisp1_stream *stream = queue->drv_priv;
 	struct rkisp1_device *dev = stream->ispdev;
-	const struct v4l2_format *pfmt = parg;
-	const struct v4l2_pix_format_mplane *pixm = NULL;
-	const struct capture_fmt *isp_fmt = NULL;
+	const struct v4l2_pix_format_mplane *pixm = &stream->out_fmt;
+	const struct capture_fmt *isp_fmt = &stream->out_isp_fmt;
 	u32 i;
-
-	if (pfmt) {
-		pixm = &pfmt->fmt.pix_mp;
-		isp_fmt = find_fmt(stream, pixm->pixelformat);
-	} else {
-		pixm = &stream->out_fmt;
-		isp_fmt = &stream->out_isp_fmt;
-	}
 
 	*num_planes = isp_fmt->mplanes;
 
@@ -1309,8 +1297,9 @@ static int rkisp1_queue_setup(struct vb2_queue *queue,
 		const struct v4l2_plane_pix_format *plane_fmt;
 
 		plane_fmt = &pixm->plane_fmt[i];
+
 		sizes[i] = plane_fmt->sizeimage;
-		alloc_ctxs[i] = dev->alloc_ctx;
+		alloc_devs[i] = dev->v4l2_dev.dev;
 	}
 
 	v4l2_dbg(1, rkisp1_debug, &dev->v4l2_dev, "%s count %d, size %d\n",
@@ -1434,7 +1423,7 @@ static void rkisp1_stop_streaming(struct vb2_queue *queue)
 
 	rkisp1_stream_stop(stream);
 	/* call to the other devices */
-	media_entity_pipeline_stop(&node->vdev.entity);
+	media_pipeline_stop(&node->vdev.entity);
 	ret = dev->pipe.set_stream(&dev->pipe, false);
 	if (ret < 0)
 		v4l2_err(v4l2_dev, "pipeline stream-off failed error:%d\n",
@@ -1562,7 +1551,7 @@ rkisp1_start_streaming(struct vb2_queue *queue, unsigned int count)
 	if (ret < 0)
 		goto stop_stream;
 
-	ret = media_entity_pipeline_start(&node->vdev.entity, &dev->pipe.pipe);
+	ret = media_pipeline_start(&node->vdev.entity, &dev->pipe.pipe);
 	if (ret < 0) {
 		v4l2_err(&dev->v4l2_dev, "start pipeline failed %d\n", ret);
 		goto pipe_stream_off;
@@ -2187,7 +2176,7 @@ static int rkisp1_register_stream_vdev(struct rkisp1_stream *stream)
 		return ret;
 	}
 
-	ret = media_entity_init(&vdev->entity, 1, &node->pad, 0);
+	ret = media_entity_pads_init(&vdev->entity, 1, &node->pad);
 	if (ret < 0)
 		goto unreg;
 
@@ -2235,12 +2224,12 @@ int rkisp1_dma_attach_device(struct rkisp1_device *rkisp1_dev)
 		return ret;
 	}
 
-	if (!common_iommu_setup_dma_ops(dev, 0x10000000, SZ_2G, domain->ops)) {
+/*	if (!common_iommu_setup_dma_ops(dev, 0x10000000, SZ_2G, domain->ops)) {
 		dev_err(dev, "Failed to set dma_ops\n");
 		iommu_detach_device(domain, dev);
 		ret = -ENODEV;
 	}
-
+*/
 	return ret;
 }
 

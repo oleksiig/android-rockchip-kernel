@@ -45,7 +45,11 @@
 #include <linux/pinctrl/consumer.h>
 #include <linux/regmap.h>
 #include <linux/dma-iommu.h>
+#include <linux/iommu.h>
+#include <linux/media.h>
+
 #include <media/videobuf2-dma-contig.h>
+
 #include "regs.h"
 #include "rkisp1.h"
 #include "common.h"
@@ -143,7 +147,7 @@ static int __isp_pipeline_s_isp_clk(struct rkisp1_pipeline *p)
 	sd = p->subdevs[0];
 	for (i = 0; i < p->num_subdevs; i++) {
 		sd = p->subdevs[i];
-		if (sd->entity.type == MEDIA_ENT_T_V4L2_SUBDEV_SENSOR)
+		if (sd->entity.function == MEDIA_ENT_F_CAM_SENSOR)
 			break;
 	}
 
@@ -230,7 +234,7 @@ static int rkisp1_pipeline_set_stream(struct rkisp1_pipeline *p, bool on)
 	if (on) {
 		if (dev->vs_irq >= 0)
 			enable_irq(dev->vs_irq);
-		rockchip_set_system_status(SYS_STATUS_ISP);
+		//rockchip_set_system_status(SYS_STATUS_ISP);
 		v4l2_subdev_call(&dev->isp_sdev.sd, video, s_stream, true);
 	}
 
@@ -245,7 +249,7 @@ static int rkisp1_pipeline_set_stream(struct rkisp1_pipeline *p, bool on)
 		if (dev->vs_irq >= 0)
 			disable_irq(dev->vs_irq);
 		v4l2_subdev_call(&dev->isp_sdev.sd, video, s_stream, false);
-		rockchip_clear_system_status(SYS_STATUS_ISP);
+		//rockchip_clear_system_status(SYS_STATUS_ISP);
 	}
 
 	return 0;
@@ -254,19 +258,19 @@ err_stream_off:
 	for (--i; i >= 0; --i)
 		v4l2_subdev_call(p->subdevs[i], video, s_stream, false);
 	v4l2_subdev_call(&dev->isp_sdev.sd, video, s_stream, false);
-	rockchip_clear_system_status(SYS_STATUS_ISP);
+	//rockchip_clear_system_status(SYS_STATUS_ISP);
 	return ret;
 }
 
 static int rkisp1_pipeline_pm_use_count(struct media_entity *entity)
 {
-	struct media_entity_graph graph;
+	struct media_graph graph;
 	int use = 0;
 
-	media_entity_graph_walk_start(&graph, entity);
+	media_graph_walk_start(&graph, entity);
 
-	while ((entity = media_entity_graph_walk_next(&graph))) {
-		if (media_entity_type(entity) == MEDIA_ENT_T_DEVNODE)
+	while ((entity = media_graph_walk_next(&graph))) {
+		if (is_media_entity_v4l2_video_device(entity))
 			use += entity->use_count;
 	}
 
@@ -278,8 +282,8 @@ static int rkisp1_pipeline_pm_power_one(struct media_entity *entity, int change)
 	struct v4l2_subdev *subdev;
 	int ret;
 
-	subdev = media_entity_type(entity) == MEDIA_ENT_T_V4L2_SUBDEV
-	       ? media_entity_to_v4l2_subdev(entity) : NULL;
+	subdev = is_media_entity_v4l2_subdev(entity) ?
+		media_entity_to_v4l2_subdev(entity) : NULL;
 
 	if (entity->use_count == 0 && change > 0 && subdev) {
 		ret = v4l2_subdev_call(subdev, core, s_power, 1);
@@ -298,26 +302,26 @@ static int rkisp1_pipeline_pm_power_one(struct media_entity *entity, int change)
 
 static int rkisp1_pipeline_pm_power(struct media_entity *entity, int change)
 {
-	struct media_entity_graph graph;
+	struct media_graph graph;
 	struct media_entity *first = entity;
 	int ret = 0;
 
 	if (!change)
 		return 0;
 
-	media_entity_graph_walk_start(&graph, entity);
+	media_graph_walk_start(&graph, entity);
 
-	while (!ret && (entity = media_entity_graph_walk_next(&graph)))
-		if (media_entity_type(entity) != MEDIA_ENT_T_DEVNODE)
+	while (!ret && (entity = media_graph_walk_next(&graph)))
+		if (!is_media_entity_v4l2_video_device(entity))
 			ret = rkisp1_pipeline_pm_power_one(entity, change);
 
 	if (!ret)
 		return 0;
 
-	media_entity_graph_walk_start(&graph, first);
+	media_graph_walk_start(&graph, first);
 
-	while ((first = media_entity_graph_walk_next(&graph)) && first != entity)
-		if (media_entity_type(first) != MEDIA_ENT_T_DEVNODE)
+	while ((first = media_graph_walk_next(&graph)) && first != entity)
+		if (!is_media_entity_v4l2_video_device(first))
 			rkisp1_pipeline_pm_power_one(first, -change);
 
 	return ret;
@@ -328,7 +332,7 @@ static int rkisp1_pipeline_pm_use(struct media_entity *entity, int use)
 	int change = use ? 1 : -1;
 	int ret;
 
-	mutex_lock(&entity->parent->graph_mutex);
+	mutex_lock(&entity->graph_obj.mdev->graph_mutex);
 
 	/* Apply use count to node. */
 	entity->use_count += change;
@@ -339,7 +343,7 @@ static int rkisp1_pipeline_pm_use(struct media_entity *entity, int use)
 	if (ret < 0)
 		entity->use_count -= change;
 
-	mutex_unlock(&entity->parent->graph_mutex);
+	mutex_unlock(&entity->graph_obj.mdev->graph_mutex);
 
 	return ret;
 }
@@ -403,7 +407,7 @@ static int rkisp1_create_links(struct rkisp1_device *dev)
 			return -ENXIO;
 		}
 
-		ret = media_entity_create_link(
+		ret = media_create_pad_link(
 				&sensor->sd->entity, pad,
 				&dev->isp_sdev.sd.entity,
 				RKISP1_ISP_PAD_SINK,
@@ -420,7 +424,7 @@ static int rkisp1_create_links(struct rkisp1_device *dev)
 	source = &dev->params_vdev.vnode.vdev.entity;
 	sink = &dev->isp_sdev.sd.entity;
 	flags = MEDIA_LNK_FL_ENABLED;
-	ret = media_entity_create_link(source, 0, sink,
+	ret = media_create_pad_link(source, 0, sink,
 				       RKISP1_ISP_PAD_SINK_PARAMS, flags);
 	if (ret < 0)
 		return ret;
@@ -430,7 +434,7 @@ static int rkisp1_create_links(struct rkisp1_device *dev)
 		/* SP links */
 		source = &dev->isp_sdev.sd.entity;
 		sink = &dev->stream[RKISP1_STREAM_SP].vnode.vdev.entity;
-		ret = media_entity_create_link(source,
+		ret = media_create_pad_link(source,
 					       RKISP1_ISP_PAD_SOURCE_PATH,
 					       sink, 0, flags);
 		if (ret < 0)
@@ -440,7 +444,7 @@ static int rkisp1_create_links(struct rkisp1_device *dev)
 	/* MP links */
 	source = &dev->isp_sdev.sd.entity;
 	sink = &dev->stream[RKISP1_STREAM_MP].vnode.vdev.entity;
-	ret = media_entity_create_link(source, RKISP1_ISP_PAD_SOURCE_PATH,
+	ret = media_create_pad_link(source, RKISP1_ISP_PAD_SOURCE_PATH,
 				       sink, 0, flags);
 	if (ret < 0)
 		return ret;
@@ -454,7 +458,7 @@ static int rkisp1_create_links(struct rkisp1_device *dev)
 		/* MIPI RAW links */
 		source = &dev->isp_sdev.sd.entity;
 		sink = &dev->stream[RKISP1_STREAM_RAW].vnode.vdev.entity;
-		ret = media_entity_create_link(source,
+		ret = media_create_pad_link(source,
 			RKISP1_ISP_PAD_SOURCE_PATH, sink, 0, flags);
 		if (ret < 0)
 			return ret;
@@ -463,7 +467,7 @@ static int rkisp1_create_links(struct rkisp1_device *dev)
 	/* 3A stats links */
 	source = &dev->isp_sdev.sd.entity;
 	sink = &dev->stats_vdev.vnode.vdev.entity;
-	return media_entity_create_link(source, RKISP1_ISP_PAD_SOURCE_STATS,
+	return media_create_pad_link(source, RKISP1_ISP_PAD_SOURCE_STATS,
 					sink, 0, flags);
 }
 
@@ -626,29 +630,25 @@ static int rkisp1_fwnode_parse(struct device *dev,
 	return 0;
 }
 
-static const struct v4l2_async_notifier_operations subdev_notifier_ops = {
-	.bound = subdev_notifier_bound,
-	.complete = subdev_notifier_complete,
-};
-
 static int isp_subdev_notifier(struct rkisp1_device *isp_dev)
 {
-	struct v4l2_async_notifier *ntf = &isp_dev->notifier;
+	struct v4l2_async_notifier *notifier = &isp_dev->notifier;
 	struct device *dev = isp_dev->dev;
 	int ret;
 
 	ret = v4l2_async_notifier_parse_fwnode_endpoints(
-		dev, ntf, sizeof(struct rkisp1_async_subdev),
+		dev, notifier, sizeof(struct rkisp1_async_subdev),
 		rkisp1_fwnode_parse);
 	if (ret < 0)
 		return ret;
 
-	if (!ntf->num_subdevs)
+	if (!notifier->num_subdevs)
 		return -ENODEV;	/* no endpoint */
 
-	ntf->ops = &subdev_notifier_ops;
+	notifier->bound = subdev_notifier_bound;
+	notifier->complete = subdev_notifier_complete;
 
-	return v4l2_async_notifier_register(&isp_dev->v4l2_dev, ntf);
+	return v4l2_async_notifier_register(&isp_dev->v4l2_dev, notifier);
 }
 
 /***************************** platform deive *******************************/
@@ -657,11 +657,9 @@ static int rkisp1_register_platform_subdevs(struct rkisp1_device *dev)
 {
 	int ret;
 
-	dev->alloc_ctx = vb2_dma_contig_init_ctx(dev->v4l2_dev.dev);
-
 	ret = rkisp1_register_isp_subdev(dev, &dev->v4l2_dev);
 	if (ret < 0)
-		goto err_cleanup_ctx;
+		return ret;
 
 	ret = rkisp1_register_stream_vdevs(dev);
 	if (ret < 0)
@@ -698,8 +696,6 @@ err_unreg_stream_vdev:
 	rkisp1_unregister_stream_vdevs(dev);
 err_unreg_isp_subdev:
 	rkisp1_unregister_isp_subdev(dev);
-err_cleanup_ctx:
-	vb2_dma_contig_cleanup_ctx(dev->alloc_ctx);
 
 	return ret;
 }
@@ -1015,12 +1011,12 @@ static int rkisp1_iommu_init(struct rkisp1_device *rkisp1_dev)
 		goto err;
 	}
 
-	if (!common_iommu_setup_dma_ops(dev, 0x10000000, SZ_2G, domain->ops)) {
+	/*if (!common_iommu_setup_dma_ops(dev, 0x10000000, SZ_2G, domain->ops)) {
 		dev_err(dev, "Failed to set dma_ops\n");
 		iommu_detach_device(domain, dev);
 		ret = -ENODEV;
 	}
-
+*/
 	return ret;
 
 err:
@@ -1100,6 +1096,10 @@ static int rkisp1_vs_irq_parse(struct platform_device *pdev)
 
 	return 0;
 }
+
+static const struct media_device_ops isp_md_ops = {
+	.link_notify = rkisp1_pipeline_link_notify,
+};
 
 static int rkisp1_plat_probe(struct platform_device *pdev)
 {
@@ -1219,6 +1219,7 @@ static int rkisp1_plat_probe(struct platform_device *pdev)
 	strlcpy(isp_dev->media_dev.model, "rkisp1",
 		sizeof(isp_dev->media_dev.model));
 	isp_dev->media_dev.dev = &pdev->dev;
+	isp_dev->media_dev.ops = &isp_md_ops;
 	v4l2_dev = &isp_dev->v4l2_dev;
 	v4l2_dev->mdev = &isp_dev->media_dev;
 	strlcpy(v4l2_dev->name, "rkisp1", sizeof(v4l2_dev->name));
@@ -1232,7 +1233,6 @@ static int rkisp1_plat_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	isp_dev->media_dev.link_notify = rkisp1_pipeline_link_notify;
 	ret = media_device_register(&isp_dev->media_dev);
 	if (ret < 0) {
 		v4l2_err(v4l2_dev, "Failed to register media device: %d\n",
@@ -1295,7 +1295,6 @@ static int rkisp1_plat_remove(struct platform_device *pdev)
 	rkisp1_unregister_stats_vdev(&isp_dev->stats_vdev);
 	rkisp1_unregister_stream_vdevs(isp_dev);
 	rkisp1_unregister_isp_subdev(isp_dev);
-	vb2_dma_contig_cleanup_ctx(isp_dev->alloc_ctx);
 
 	return 0;
 }
@@ -1351,19 +1350,6 @@ static int __maybe_unused rkisp1_runtime_resume(struct device *dev)
 
 	return 0;
 }
-
-static int __init rkisp1_clr_unready_dev(void)
-{
-	struct rkisp1_device *isp_dev;
-
-	mutex_lock(&rkisp1_dev_mutex);
-	list_for_each_entry(isp_dev, &rkisp1_device_list, list)
-		v4l2_async_notifier_clr_unready_dev(&isp_dev->notifier);
-	mutex_unlock(&rkisp1_dev_mutex);
-
-	return 0;
-}
-late_initcall_sync(rkisp1_clr_unready_dev);
 
 static const struct dev_pm_ops rkisp1_plat_pm_ops = {
 	SET_SYSTEM_SLEEP_PM_OPS(rkisp1_suspend, rkisp1_resume)
