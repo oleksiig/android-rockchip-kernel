@@ -1659,6 +1659,7 @@
 			      "hclk_isp", "hclk_isp_wrap";
 		power-domains = <&power RK3399_PD_ISP0>;
 		iommus = <&isp0_mmu>;
+		rockchip,grf = <&grf>;
 		status = "disabled";
 	};
 
