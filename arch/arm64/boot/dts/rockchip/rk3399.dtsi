@@ -75,6 +75,7 @@
 			reg = <0x0 0x0>;
 			enable-method = "psci";
 			capacity-dmips-mhz = <485>;
+			next-level-cache = <&cpu_l_l2>;
 			clocks = <&cru ARMCLKL>;
 			#cooling-cells = <2>; /* min followed by max */
 			dynamic-power-coefficient = <100>;
@@ -87,6 +88,7 @@
 			reg = <0x0 0x1>;
 			enable-method = "psci";
 			capacity-dmips-mhz = <485>;
+			next-level-cache = <&cpu_l_l2>;
 			clocks = <&cru ARMCLKL>;
 			#cooling-cells = <2>; /* min followed by max */
 			dynamic-power-coefficient = <100>;
@@ -99,6 +101,7 @@
 			reg = <0x0 0x2>;
 			enable-method = "psci";
 			capacity-dmips-mhz = <485>;
+			next-level-cache = <&cpu_l_l2>;
 			clocks = <&cru ARMCLKL>;
 			#cooling-cells = <2>; /* min followed by max */
 			dynamic-power-coefficient = <100>;
@@ -111,6 +114,7 @@
 			reg = <0x0 0x3>;
 			enable-method = "psci";
 			capacity-dmips-mhz = <485>;
+			next-level-cache = <&cpu_l_l2>;
 			clocks = <&cru ARMCLKL>;
 			#cooling-cells = <2>; /* min followed by max */
 			dynamic-power-coefficient = <100>;
@@ -123,6 +127,7 @@
 			reg = <0x0 0x100>;
 			enable-method = "psci";
 			capacity-dmips-mhz = <1024>;
+			next-level-cache = <&cpu_b_l2>;
 			clocks = <&cru ARMCLKB>;
 			#cooling-cells = <2>; /* min followed by max */
 			dynamic-power-coefficient = <436>;
@@ -135,6 +140,7 @@
 			reg = <0x0 0x101>;
 			enable-method = "psci";
 			capacity-dmips-mhz = <1024>;
+			next-level-cache = <&cpu_b_l2>;
 			clocks = <&cru ARMCLKB>;
 			#cooling-cells = <2>; /* min followed by max */
 			dynamic-power-coefficient = <436>;
@@ -161,6 +167,14 @@
 				exit-latency-us = <500>;
 				min-residency-us = <2000>;
 			};
+		};
+
+		cpu_l_l2: l2-cache0 {
+			compatible = "cache";
+		};
+
+		cpu_b_l2: l2-cache1 {
+			compatible = "cache";
 		};
 	};
 
