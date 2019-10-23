@@ -2008,8 +2008,8 @@
 		i2c2 {
 			i2c2_xfer: i2c2-xfer {
 				rockchip,pins =
-					<2 1 RK_FUNC_2 &pcfg_pull_none_12ma>,
-					<2 0 RK_FUNC_2 &pcfg_pull_none_12ma>;
+					<2 1 RK_FUNC_3 &pcfg_pull_none_12ma>,
+					<2 0 RK_FUNC_3 &pcfg_pull_none_12ma>;
 			};
 		};
 
@@ -2040,16 +2040,16 @@
 		i2c6 {
 			i2c6_xfer: i2c6-xfer {
 				rockchip,pins =
-					<2 10 RK_FUNC_2 &pcfg_pull_none>,
-					<2 9 RK_FUNC_2 &pcfg_pull_none>;
+					<2 10 RK_FUNC_3 &pcfg_pull_none>,
+					<2 9 RK_FUNC_3 &pcfg_pull_none>;
 			};
 		};
 
 		i2c7 {
 			i2c7_xfer: i2c7-xfer {
 				rockchip,pins =
-					<2 8 RK_FUNC_2 &pcfg_pull_none>,
-					<2 7 RK_FUNC_2 &pcfg_pull_none>;
+					<2 8 RK_FUNC_3 &pcfg_pull_none>,
+					<2 7 RK_FUNC_3 &pcfg_pull_none>;
 			};
 		};
 
