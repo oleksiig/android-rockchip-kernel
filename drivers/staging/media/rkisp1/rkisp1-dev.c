@@ -386,7 +386,7 @@ err_unreg_isp_subdev:
 	return ret;
 }
 
-static irqreturn_t rkisp1_isr(int irq, void *ctx)
+irqreturn_t rkisp1_isr(int irq, void *ctx)
 {
 	struct device *dev = ctx;
 	struct rkisp1_device *rkisp1 = dev_get_drvdata(dev);
@@ -397,9 +397,10 @@ static irqreturn_t rkisp1_isr(int irq, void *ctx)
 	 * it is potentially incremented by rkisp1_isp_isr() in the vertical
 	 * sync.
 	 */
-	rkisp1_capture_isr(rkisp1);
-	rkisp1_isp_isr(rkisp1);
-	rkisp1_mipi_isr(rkisp1);
+	if (rkisp1_capture_isr(rkisp1) == IRQ_NONE &&
+	    rkisp1_isp_isr(rkisp1) == IRQ_NONE &&
+	    rkisp1_mipi_isr(rkisp1) == IRQ_NONE)
+		return IRQ_NONE;
 
 	return IRQ_HANDLED;
 }
