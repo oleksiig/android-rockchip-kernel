@@ -306,9 +306,9 @@ void rkisp1_isp_unregister(struct rkisp1_device *rkisp1);
 
 const struct rkisp1_isp_mbus_info *rkisp1_isp_mbus_info_get(u32 mbus_code);
 
-void rkisp1_isp_isr(struct rkisp1_device *rkisp1);
-void rkisp1_mipi_isr(struct rkisp1_device *rkisp1);
-void rkisp1_capture_isr(struct rkisp1_device *rkisp1);
+irqreturn_t rkisp1_isp_isr(struct rkisp1_device *rkisp1);
+irqreturn_t rkisp1_mipi_isr(struct rkisp1_device *rkisp1);
+irqreturn_t rkisp1_capture_isr(struct rkisp1_device *rkisp1);
 void rkisp1_stats_isr(struct rkisp1_stats *stats, u32 isp_ris);
 void rkisp1_params_isr(struct rkisp1_device *rkisp1, u32 isp_mis);
 
