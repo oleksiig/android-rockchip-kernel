@@ -906,6 +906,7 @@ static int rkisp1_mipi_csi2_start(struct rkisp1_isp *isp,
 	union phy_configure_opts opts;
 	struct phy_configure_opts_mipi_dphy *cfg = &opts.mipi_dphy;
 	s64 pixel_clock;
+	int ret;
 
 	if (!sensor->pixel_rate_ctrl) {
 		dev_warn(sensor->sd->dev, "No pixel rate control in subdev\n");
@@ -920,9 +921,24 @@ static int rkisp1_mipi_csi2_start(struct rkisp1_isp *isp,
 
 	phy_mipi_dphy_get_default_config(pixel_clock, isp->sink_fmt->bus_width,
 					 sensor->lanes, cfg);
-	phy_set_mode(sensor->dphy, PHY_MODE_MIPI_DPHY);
-	phy_configure(sensor->dphy, &opts);
-	phy_power_on(sensor->dphy);
+
+	ret = phy_set_mode(sensor->dphy, PHY_MODE_MIPI_DPHY);
+	if (ret) {
+		dev_err(sensor->sd->dev, "Fail setting MIPI DPHY mode\n");
+		return -EINVAL;
+	}
+
+	ret = phy_configure(sensor->dphy, &opts);
+	if (ret && ret != -EOPNOTSUPP) {
+		dev_err(sensor->sd->dev, "Fail configuring MIPI DPHY\n");
+		return -EINVAL;
+	}
+
+	ret = phy_power_on(sensor->dphy);
+	if (ret) {
+		dev_err(sensor->sd->dev, "Fail powering on MIPI DPHY\n");
+		return -EINVAL;
+	}
 
 	return 0;
 }
