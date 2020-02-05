@@ -1791,6 +1791,10 @@ KBASE_EXPORT_TEST_API(kbase_cpu_vm_close);
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 11, 0))
  static int kbase_cpu_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
  {
+#elif (LINUX_VERSION_CODE > KERNEL_VERSION(4, 16, 0))
+static vm_fault_t kbase_cpu_vm_fault(struct vm_fault *vmf)
+{
+	struct vm_area_struct *vma = vmf->vma;
 #else
 static int kbase_cpu_vm_fault(struct vm_fault *vmf)
 {
@@ -1825,7 +1829,11 @@ static int kbase_cpu_vm_fault(struct vm_fault *vmf)
 	addr = (pgoff_t)(vmf->address >> PAGE_SHIFT);
 #endif
 	while (i < map->alloc->nents && (addr < vma->vm_end >> PAGE_SHIFT)) {
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(5, 0, 0))
+		ret = vmf_insert_pfn(vma, addr << PAGE_SHIFT,
+#else
 		ret = vm_insert_pfn(vma, addr << PAGE_SHIFT,
+#endif
 		    PFN_DOWN(map->alloc->pages[i]));
 		if (unlikely(ret & VM_FAULT_ERROR))
 			goto locked_bad_fault;
@@ -1907,7 +1915,11 @@ static int kbase_cpu_mmap(struct kbase_va_region *reg, struct vm_area_struct *vm
 		for (i = 0; i < nr_pages; i++) {
 			unsigned long pfn = PFN_DOWN(page_array[i + start_off]);
 
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(5, 0, 0))
+			err = vmf_insert_pfn(vma, addr, pfn);
+#else
 			err = vm_insert_pfn(vma, addr, pfn);
+#endif
 			if (unlikely(WARN_ON(err & VM_FAULT_ERROR)))
 				break;
 
