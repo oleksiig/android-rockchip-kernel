@@ -41,6 +41,7 @@
 #include <linux/mempool.h>
 #include <linux/slab.h>
 #include <linux/file.h>
+#include <linux/timekeeping.h>
 
 #ifdef CONFIG_MALI_FPGA_BUS_LOGGER
 #include <linux/bus_logger.h>
@@ -739,7 +740,7 @@ enum kbase_trace_code {
 #define KBASE_TRACE_FLAG_JOBSLOT  (((u8)1) << 1)
 
 struct kbase_trace {
-	struct timespec timestamp;
+	struct timespec64 timestamp;
 	u32 thread_id;
 	u32 cpu;
 	void *ctx;

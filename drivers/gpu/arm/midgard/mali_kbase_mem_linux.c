@@ -58,7 +58,7 @@ static int kbase_tracking_page_setup(struct kbase_context *kctx, struct vm_area_
  * Shrink (or completely remove) all CPU mappings which reference the shrunk
  * part of the allocation.
  *
- * Note: Caller must be holding the processes mmap_sem lock.
+ * Note: Caller must be holding the processes mmap_lock.
  */
 static void kbase_mem_shrink_cpu_mapping(struct kbase_context *kctx,
 		struct kbase_va_region *reg,
@@ -564,29 +564,7 @@ void kbase_zone_cache_clear(struct kbase_mem_phy_alloc *alloc)
 static void kbase_mem_evictable_mark_reclaim(struct kbase_mem_phy_alloc *alloc)
 {
 	struct kbase_context *kctx = alloc->imported.kctx;
-	struct kbase_mem_zone_cache_entry *zone_cache;
 	int __maybe_unused new_page_count;
-	int err;
-
-	/* Attempt to build a zone cache of tracking */
-	err = kbase_zone_cache_build(alloc);
-	if (err == 0) {
-		/* Bulk update all the zones */
-		list_for_each_entry(zone_cache, &alloc->zone_cache, zone_node) {
-			zone_page_state_add(zone_cache->count,
-					zone_cache->zone, NR_SLAB_RECLAIMABLE);
-		}
-	} else {
-		/* Fall-back to page by page updates */
-		int i;
-
-		for (i = 0; i < alloc->nents; i++) {
-			struct page *p = phys_to_page(alloc->pages[i]);
-			struct zone *zone = page_zone(p);
-
-			zone_page_state_add(1, zone, NR_SLAB_RECLAIMABLE);
-		}
-	}
 
 	kbase_process_page_usage_dec(kctx, alloc->nents);
 	new_page_count = kbase_atomic_sub_pages(alloc->nents,
@@ -606,9 +584,7 @@ static
 void kbase_mem_evictable_unmark_reclaim(struct kbase_mem_phy_alloc *alloc)
 {
 	struct kbase_context *kctx = alloc->imported.kctx;
-	struct kbase_mem_zone_cache_entry *zone_cache;
 	int __maybe_unused new_page_count;
-	int err;
 
 	new_page_count = kbase_atomic_add_pages(alloc->nents,
 						&kctx->used_pages);
@@ -618,26 +594,6 @@ void kbase_mem_evictable_unmark_reclaim(struct kbase_mem_phy_alloc *alloc)
 	 * against the process and thus is visible to the OOM killer,
 	 * then remove it from the reclaimable accounting. */
 	kbase_process_page_usage_inc(kctx, alloc->nents);
-
-	/* Attempt to build a zone cache of tracking */
-	err = kbase_zone_cache_build(alloc);
-	if (err == 0) {
-		/* Bulk update all the zones */
-		list_for_each_entry(zone_cache, &alloc->zone_cache, zone_node) {
-			zone_page_state_add(-zone_cache->count,
-					zone_cache->zone, NR_SLAB_RECLAIMABLE);
-		}
-	} else {
-		/* Fall-back to page by page updates */
-		int i;
-
-		for (i = 0; i < alloc->nents; i++) {
-			struct page *p = phys_to_page(alloc->pages[i]);
-			struct zone *zone = page_zone(p);
-
-			zone_page_state_add(-1, zone, NR_SLAB_RECLAIMABLE);
-		}
-	}
 
 	KBASE_TLSTREAM_AUX_PAGESALLOC(
 			(u32)kctx->id,
@@ -749,7 +705,7 @@ int kbase_mem_flags_change(struct kbase_context *kctx, u64 gpu_addr, unsigned in
 		real_flags |= KBASE_REG_SHARE_IN;
 
 	/* now we can lock down the context, and find the region */
-	down_write(&current->mm->mmap_sem);
+	down_write(&current->mm->mmap_lock);
 	kbase_gpu_vm_lock(kctx);
 
 	/* Validate the region */
@@ -821,7 +777,7 @@ int kbase_mem_flags_change(struct kbase_context *kctx, u64 gpu_addr, unsigned in
 
 out_unlock:
 	kbase_gpu_vm_unlock(kctx);
-	up_write(&current->mm->mmap_sem);
+	up_write(&current->mm->mmap_lock);
 out:
 	return ret;
 }
@@ -1157,7 +1113,7 @@ static struct kbase_va_region *kbase_mem_from_user_buffer(
 		*flags |= KBASE_MEM_IMPORT_HAVE_PAGES;
 	}
 
-	down_read(&current->mm->mmap_sem);
+	down_read(&current->mm->mmap_lock);
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
 	faulted_pages = get_user_pages(current, current->mm, address, *va_pages,
@@ -1171,7 +1127,7 @@ static struct kbase_va_region *kbase_mem_from_user_buffer(
 			pages, NULL);
 #endif
 
-	up_read(&current->mm->mmap_sem);
+	up_read(&current->mm->mmap_lock);
 
 	if (faulted_pages != *va_pages)
 		goto fault_mismatch;
@@ -1636,7 +1592,7 @@ int kbase_mem_commit(struct kbase_context *kctx, u64 gpu_addr, u64 new_pages)
 		return -EINVAL;
 	}
 
-	down_write(&current->mm->mmap_sem);
+	down_write(&current->mm->mmap_lock);
 	kbase_gpu_vm_lock(kctx);
 
 	/* Validate the region */
@@ -1678,7 +1634,7 @@ int kbase_mem_commit(struct kbase_context *kctx, u64 gpu_addr, u64 new_pages)
 		 * No update to the mm so downgrade the writer lock to a read
 		 * lock so other readers aren't blocked after this point.
 		 */
-		downgrade_write(&current->mm->mmap_sem);
+		downgrade_write(&current->mm->mmap_lock);
 		read_locked = true;
 
 		/* Allocate some more pages */
@@ -1734,9 +1690,9 @@ int kbase_mem_commit(struct kbase_context *kctx, u64 gpu_addr, u64 new_pages)
 out_unlock:
 	kbase_gpu_vm_unlock(kctx);
 	if (read_locked)
-		up_read(&current->mm->mmap_sem);
+		up_read(&current->mm->mmap_lock);
 	else
-		up_write(&current->mm->mmap_sem);
+		up_write(&current->mm->mmap_lock);
 
 	return res;
 }
@@ -1791,6 +1747,10 @@ KBASE_EXPORT_TEST_API(kbase_cpu_vm_close);
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 11, 0))
  static int kbase_cpu_vm_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
  {
+#elif (LINUX_VERSION_CODE > KERNEL_VERSION(4, 16, 0))
+static vm_fault_t kbase_cpu_vm_fault(struct vm_fault *vmf)
+{
+	struct vm_area_struct *vma = vmf->vma;
 #else
 static int kbase_cpu_vm_fault(struct vm_fault *vmf)
 {
@@ -1825,7 +1785,11 @@ static int kbase_cpu_vm_fault(struct vm_fault *vmf)
 	addr = (pgoff_t)(vmf->address >> PAGE_SHIFT);
 #endif
 	while (i < map->alloc->nents && (addr < vma->vm_end >> PAGE_SHIFT)) {
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(5, 0, 0))
+		ret = vmf_insert_pfn(vma, addr << PAGE_SHIFT,
+#else
 		ret = vm_insert_pfn(vma, addr << PAGE_SHIFT,
+#endif
 		    PFN_DOWN(map->alloc->pages[i]));
 		if (unlikely(ret & VM_FAULT_ERROR))
 			goto locked_bad_fault;
@@ -1907,7 +1871,11 @@ static int kbase_cpu_mmap(struct kbase_va_region *reg, struct vm_area_struct *vm
 		for (i = 0; i < nr_pages; i++) {
 			unsigned long pfn = PFN_DOWN(page_array[i + start_off]);
 
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(5, 0, 0))
+			err = vmf_insert_pfn(vma, addr, pfn);
+#else
 			err = vm_insert_pfn(vma, addr, pfn);
+#endif
 			if (unlikely(WARN_ON(err & VM_FAULT_ERROR)))
 				break;
 
@@ -2090,14 +2058,14 @@ void kbase_os_mem_map_lock(struct kbase_context *kctx)
 {
 	struct mm_struct *mm = current->mm;
 	(void)kctx;
-	down_read(&mm->mmap_sem);
+	down_read(&mm->mmap_lock);
 }
 
 void kbase_os_mem_map_unlock(struct kbase_context *kctx)
 {
 	struct mm_struct *mm = current->mm;
 	(void)kctx;
-	up_read(&mm->mmap_sem);
+	up_read(&mm->mmap_lock);
 }
 
 static int kbasep_reg_mmap(struct kbase_context *kctx,

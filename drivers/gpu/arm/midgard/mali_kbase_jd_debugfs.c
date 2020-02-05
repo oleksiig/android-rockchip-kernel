@@ -69,7 +69,9 @@ static void kbase_jd_debugfs_fence_info(struct kbase_jd_atom *atom,
 #endif
 
 			seq_printf(sfile,
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0))
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(5, 0, 0))
+					"Sd(%llu#%llu: %s) ",
+#elif (LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0))
 					"Sd(%u#%u: %s) ",
 #else
 					"Sd(%llu#%u: %s) ",
@@ -89,7 +91,9 @@ static void kbase_jd_debugfs_fence_info(struct kbase_jd_atom *atom,
 #endif
 
 			seq_printf(sfile,
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0))
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(5, 0, 0))
+					"Wd(%llu#%llu: %s) ",
+#elif (LINUX_VERSION_CODE < KERNEL_VERSION(4, 8, 0))
 					"Wd(%u#%u: %s) ",
 #else
 					"Wd(%llu#%u: %s) ",

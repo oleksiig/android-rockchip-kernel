@@ -200,8 +200,8 @@ include  $(src)/$(MALI_BACKEND_PATH)/$(CONFIG_MALI_BACKEND_REAL)/Kbuild
 mali_kbase-y += $(BACKEND:.c=.o)
 
 
-ccflags-y += -I$(src)/$(MALI_BACKEND_PATH)/$(CONFIG_MALI_BACKEND_REAL)
-subdir-ccflags-y += -I$(src)/$(MALI_BACKEND_PATH)/$(CONFIG_MALI_BACKEND_REAL)
+ccflags-y += -I$(srctree)/$(src)/$(MALI_BACKEND_PATH)/$(CONFIG_MALI_BACKEND_REAL)
+subdir-ccflags-y += -I$(srctree)/$(src)/$(MALI_BACKEND_PATH)/$(CONFIG_MALI_BACKEND_REAL)
 
 # Default to devicetree platform if neither a fake platform or a thirdparty
 # platform is configured.
@@ -212,7 +212,7 @@ endif
 mali_kbase-$(CONFIG_MALI_PLATFORM_DEVICETREE) += \
 	platform/devicetree/mali_kbase_runtime_pm.o \
 	platform/devicetree/mali_kbase_config_devicetree.o
-ccflags-$(CONFIG_MALI_PLATFORM_DEVICETREE) += -I$(src)/platform/devicetree
+ccflags-$(CONFIG_MALI_PLATFORM_DEVICETREE) += -I$(srctree)/$(src)/platform/devicetree
 
 # For kutf and mali_kutf_irq_latency_test
 obj-$(CONFIG_MALI_KUTF) += tests/

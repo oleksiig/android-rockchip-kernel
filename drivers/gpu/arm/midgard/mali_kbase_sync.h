@@ -26,7 +26,7 @@
 #ifndef MALI_KBASE_SYNC_H
 #define MALI_KBASE_SYNC_H
 
-#include <linux/syscalls.h>
+#include <linux/fdtable.h>
 
 #ifdef CONFIG_SYNC
 #include <sync.h>
@@ -157,7 +157,7 @@ void kbase_sync_fence_out_remove(struct kbase_jd_atom *katom);
  */
 static inline void kbase_sync_fence_close_fd(int fd)
 {
-	ksys_close(fd);
+	close_fd(fd);
 }
 
 /**
