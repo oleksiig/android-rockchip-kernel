@@ -1136,7 +1136,7 @@ static void rkisp1_try_fmt(const struct rkisp1_capture *cap,
 	pixm->height = clamp_t(u32, pixm->height,
 			       RKISP1_RSZ_SRC_MIN_HEIGHT, max_heights[cap->id]);
 
-	pixm->field = V4L2_FIELD_NONE;
+	pixm->field = V4L2_FIELD_ANY;
 	pixm->colorspace = V4L2_COLORSPACE_DEFAULT;
 	pixm->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
 
