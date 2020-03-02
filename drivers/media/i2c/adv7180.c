@@ -363,11 +363,17 @@ static int adv7180_querystd(struct v4l2_subdev *sd, v4l2_std_id *std)
 		goto unlock;
 
 	msleep(100);
-	__adv7180_status(state, NULL, std);
+	err = __adv7180_status(state, NULL, std);
+
+	if(*std == V4L2_STD_UNKNOWN)
+		goto unlock;
+
+	state->curr_norm = *std;
 
 	err = v4l2_std_to_adv7180(state->curr_norm);
-	if (err < 0)
+	if (err < 0) {
 		goto unlock;
+	}
 
 	err = adv7180_set_video_standard(state, err);
 
