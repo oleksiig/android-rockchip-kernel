@@ -1379,9 +1379,7 @@ static void kbasep_try_reset_gpu_early_locked(struct kbase_device *kbdev)
 static void kbasep_try_reset_gpu_early(struct kbase_device *kbdev)
 {
 	unsigned long flags;
-	struct kbasep_js_device_data *js_devdata;
 
-	js_devdata = &kbdev->js_data;
 	spin_lock_irqsave(&kbdev->hwaccess_lock, flags);
 	kbasep_try_reset_gpu_early_locked(kbdev);
 	spin_unlock_irqrestore(&kbdev->hwaccess_lock, flags);
@@ -1426,9 +1424,7 @@ bool kbase_prepare_to_reset_gpu(struct kbase_device *kbdev)
 {
 	unsigned long flags;
 	bool ret;
-	struct kbasep_js_device_data *js_devdata;
 
-	js_devdata = &kbdev->js_data;
 	spin_lock_irqsave(&kbdev->hwaccess_lock, flags);
 	ret = kbase_prepare_to_reset_gpu_locked(kbdev);
 	spin_unlock_irqrestore(&kbdev->hwaccess_lock, flags);
