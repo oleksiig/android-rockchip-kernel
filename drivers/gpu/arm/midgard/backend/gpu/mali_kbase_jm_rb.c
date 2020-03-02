@@ -348,6 +348,7 @@ static bool kbasep_js_job_check_ref_cores(struct kbase_device *kbdev,
 			katom->coreref_state =
 			KBASE_ATOM_COREREF_STATE_WAITING_FOR_REQUESTED_CORES;
 
+			/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 		case KBASE_ATOM_COREREF_STATE_WAITING_FOR_REQUESTED_CORES:
@@ -393,6 +394,7 @@ static bool kbasep_js_job_check_ref_cores(struct kbase_device *kbdev,
 				KBASE_ATOM_COREREF_STATE_RECHECK_AFFINITY;
 			}
 
+			/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 		case KBASE_ATOM_COREREF_STATE_RECHECK_AFFINITY:
@@ -482,6 +484,7 @@ static bool kbasep_js_job_check_ref_cores(struct kbase_device *kbdev,
 			katom->coreref_state =
 			KBASE_ATOM_COREREF_STATE_CHECK_AFFINITY_VIOLATIONS;
 
+			/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 		case KBASE_ATOM_COREREF_STATE_CHECK_AFFINITY_VIOLATIONS:
 			KBASE_DEBUG_ASSERT(katom->affinity != 0 ||
@@ -539,6 +542,7 @@ static void kbasep_js_job_check_deref_cores(struct kbase_device *kbdev,
 		KBASE_DEBUG_ASSERT(katom->affinity != 0 ||
 					(katom->core_req & BASE_JD_REQ_T));
 
+		/* fall through */
 		/* *** FALLTHROUGH *** */
 
 	case KBASE_ATOM_COREREF_STATE_RECHECK_AFFINITY:
@@ -587,6 +591,7 @@ static void kbasep_js_job_check_deref_cores_nokatom(struct kbase_device *kbdev,
 		KBASE_DEBUG_ASSERT(affinity != 0 ||
 					(core_req & BASE_JD_REQ_T));
 
+		/* fall through */
 		/* *** FALLTHROUGH *** */
 
 	case KBASE_ATOM_COREREF_STATE_RECHECK_AFFINITY:
@@ -640,6 +645,7 @@ static void kbase_gpu_release_atom(struct kbase_device *kbdev,
 
 		if (katom->core_req & BASE_JD_REQ_PERMON)
 			kbase_pm_release_gpu_cycle_counter_nolock(kbdev);
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO LOWER STATE*** */
 
 		KBASE_TLSTREAM_TL_NRET_ATOM_LPU(katom,
@@ -649,13 +655,17 @@ static void kbase_gpu_release_atom(struct kbase_device *kbdev,
 		KBASE_TLSTREAM_TL_NRET_CTX_LPU(kctx,
 			&kbdev->gpu_props.props.raw_props.js_features
 				[katom->slot_nr]);
+		/* fall through */
+		/* ***FALLTHROUGH: TRANSITION TO LOWER STATE*** */
 
 	case KBASE_ATOM_GPU_RB_READY:
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO LOWER STATE*** */
 
 	case KBASE_ATOM_GPU_RB_WAITING_AFFINITY:
 		kbase_js_affinity_release_slot_cores(kbdev, katom->slot_nr,
 							katom->affinity);
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO LOWER STATE*** */
 
 	case KBASE_ATOM_GPU_RB_WAITING_FOR_CORE_AVAILABLE:
@@ -677,13 +687,15 @@ static void kbase_gpu_release_atom(struct kbase_device *kbdev,
 			kbase_ipa_model_use_configured_locked(kbdev);
 		}
 
-
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO LOWER STATE*** */
 
 	case KBASE_ATOM_GPU_RB_WAITING_PROTECTED_MODE_PREV:
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO LOWER STATE*** */
 
 	case KBASE_ATOM_GPU_RB_WAITING_BLOCKED:
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO LOWER STATE*** */
 
 	case KBASE_ATOM_GPU_RB_RETURN_TO_JS:
@@ -831,6 +843,7 @@ static int kbase_jm_enter_protected_mode(struct kbase_device *kbdev,
 		katom[idx]->protected_state.enter =
 			KBASE_ATOM_ENTER_PROTECTED_VINSTR;
 
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 	case KBASE_ATOM_ENTER_PROTECTED_VINSTR:
@@ -860,6 +873,7 @@ static int kbase_jm_enter_protected_mode(struct kbase_device *kbdev,
 
 		kbase_pm_update_cores_state_nolock(kbdev);
 
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 	case KBASE_ATOM_ENTER_PROTECTED_IDLE_L2:
@@ -878,6 +892,7 @@ static int kbase_jm_enter_protected_mode(struct kbase_device *kbdev,
 		katom[idx]->protected_state.enter =
 			KBASE_ATOM_ENTER_PROTECTED_FINISHED;
 
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 	case KBASE_ATOM_ENTER_PROTECTED_FINISHED:
@@ -954,6 +969,7 @@ static int kbase_jm_exit_protected_mode(struct kbase_device *kbdev,
 		kbdev->protected_mode_transition = true;
 		kbase_pm_update_cores_state_nolock(kbdev);
 
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 	case KBASE_ATOM_EXIT_PROTECTED_IDLE_L2:
 		if (kbase_pm_get_ready_cores(kbdev, KBASE_PM_CORE_L2) ||
@@ -967,6 +983,7 @@ static int kbase_jm_exit_protected_mode(struct kbase_device *kbdev,
 		katom[idx]->protected_state.exit =
 				KBASE_ATOM_EXIT_PROTECTED_RESET;
 
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 	case KBASE_ATOM_EXIT_PROTECTED_RESET:
@@ -999,6 +1016,7 @@ static int kbase_jm_exit_protected_mode(struct kbase_device *kbdev,
 		katom[idx]->protected_state.exit =
 				KBASE_ATOM_EXIT_PROTECTED_RESET_WAIT;
 
+		/* fall through */
 		/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 	case KBASE_ATOM_EXIT_PROTECTED_RESET_WAIT:
@@ -1049,6 +1067,7 @@ void kbase_backend_slot_update(struct kbase_device *kbdev)
 				katom[idx]->gpu_rb_state =
 				KBASE_ATOM_GPU_RB_WAITING_PROTECTED_MODE_PREV;
 
+			/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 			case KBASE_ATOM_GPU_RB_WAITING_PROTECTED_MODE_PREV:
@@ -1069,6 +1088,7 @@ void kbase_backend_slot_update(struct kbase_device *kbdev)
 				katom[idx]->gpu_rb_state =
 					KBASE_ATOM_GPU_RB_WAITING_PROTECTED_MODE_TRANSITION;
 
+			/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 			case KBASE_ATOM_GPU_RB_WAITING_PROTECTED_MODE_TRANSITION:
@@ -1104,6 +1124,7 @@ void kbase_backend_slot_update(struct kbase_device *kbdev)
 				katom[idx]->gpu_rb_state =
 					KBASE_ATOM_GPU_RB_WAITING_FOR_CORE_AVAILABLE;
 
+			/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 			case KBASE_ATOM_GPU_RB_WAITING_FOR_CORE_AVAILABLE:
@@ -1144,6 +1165,7 @@ void kbase_backend_slot_update(struct kbase_device *kbdev)
 				katom[idx]->gpu_rb_state =
 					KBASE_ATOM_GPU_RB_WAITING_AFFINITY;
 
+			/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 			case KBASE_ATOM_GPU_RB_WAITING_AFFINITY:
@@ -1153,6 +1175,7 @@ void kbase_backend_slot_update(struct kbase_device *kbdev)
 				katom[idx]->gpu_rb_state =
 					KBASE_ATOM_GPU_RB_READY;
 
+				/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 			case KBASE_ATOM_GPU_RB_READY:
@@ -1202,6 +1225,7 @@ void kbase_backend_slot_update(struct kbase_device *kbdev)
 				kbase_pm_metrics_update(kbdev,
 						&katom[idx]->start_timestamp);
 
+				/* fall through */
 			/* ***FALLTHROUGH: TRANSITION TO HIGHER STATE*** */
 
 			case KBASE_ATOM_GPU_RB_SUBMITTED:
@@ -1915,11 +1939,8 @@ void kbase_backend_complete_wq_post_sched(struct kbase_device *kbdev,
 
 void kbase_gpu_dump_slots(struct kbase_device *kbdev)
 {
-	struct kbasep_js_device_data *js_devdata;
 	unsigned long flags;
 	int js;
-
-	js_devdata = &kbdev->js_data;
 
 	spin_lock_irqsave(&kbdev->hwaccess_lock, flags);
 
