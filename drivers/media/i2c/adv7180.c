@@ -1284,6 +1284,10 @@ static int init_device(struct adv7180_state *state)
 	if (ret)
 		goto out_unlock;
 
+	ret = adv7182_select_input(state, state->input);
+	if (ret)
+		goto out_unlock;
+
 	adv7180_set_field_mode(state);
 
 	/* register for interrupts */
