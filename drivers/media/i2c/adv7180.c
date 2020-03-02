@@ -610,6 +610,9 @@ static int adv7180_init_controls(struct adv7180_state *state)
 			  ADV7180_HUE_MAX, 1, ADV7180_HUE_DEF);
 	v4l2_ctrl_new_custom(&state->ctrl_hdl, &adv7180_ctrl_fast_switch, NULL);
 
+	v4l2_ctrl_new_std(&state->ctrl_hdl, &adv7180_ctrl_ops,
+			V4L2_CID_PIXEL_RATE, 13500000, 27000000, 13500000, 27000000);
+
 	state->sd.ctrl_handler = &state->ctrl_hdl;
 	if (state->ctrl_hdl.error) {
 		int err = state->ctrl_hdl.error;
