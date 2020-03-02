@@ -45,6 +45,9 @@ static void kbase_jd_debugfs_fence_info(struct kbase_jd_atom *atom,
 				   info.fence, info.status);
 			break;
 		}
+
+	/* fall through */
+
 	case BASE_JD_REQ_SOFT_FENCE_WAIT:
 		res = kbase_sync_fence_in_info_get(atom, &info);
 		if (0 == res) {
