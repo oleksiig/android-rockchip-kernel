@@ -1260,10 +1260,22 @@ static const struct adv7180_chip_info adv7282_m_info = {
 static int init_device(struct adv7180_state *state)
 {
 	int ret;
+	struct i2c_client *i2c = state->client;
 
 	mutex_lock(&state->mutex);
 
 	adv7180_set_power_pin(state, true);
+
+	/* Identification */
+	ret = i2c_smbus_read_byte_data(i2c, ADV7180_REG_IDENT);
+	if(ret < 0) {
+		v4l_info(i2c, "read ID failed @ 0x%02x (%s): error %d\n",
+			i2c->addr, i2c->adapter->name, ret);
+		goto out_unlock;
+	}
+
+	v4l_info(i2c, "chip ID=0x%02x @ 0x%02x (%s)\n",
+		 ret, i2c->addr, i2c->adapter->name);
 
 	adv7180_write(state, ADV7180_REG_PWR_MAN, ADV7180_PWR_MAN_RES);
 	usleep_range(5000, 10000);
@@ -1322,9 +1334,6 @@ static int adv7180_probe(struct i2c_client *client,
 	/* Check if the adapter supports the needed features */
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_BYTE_DATA))
 		return -EIO;
-
-	v4l_info(client, "chip found @ 0x%02x (%s)\n",
-		 client->addr, client->adapter->name);
 
 	state = devm_kzalloc(&client->dev, sizeof(*state), GFP_KERNEL);
 	if (state == NULL)
