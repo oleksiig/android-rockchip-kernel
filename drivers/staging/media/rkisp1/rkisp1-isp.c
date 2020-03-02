@@ -18,7 +18,7 @@
 
 #include "rkisp1-common.h"
 
-#define RKISP1_DEF_SINK_PAD_FMT MEDIA_BUS_FMT_SRGGB10_1X10
+#define RKISP1_DEF_SINK_PAD_FMT MEDIA_BUS_FMT_YUYV8_2X8
 #define RKISP1_DEF_SRC_PAD_FMT MEDIA_BUS_FMT_YUYV8_2X8
 
 #define RKISP1_ISP_DEV_NAME	RKISP1_DRIVER_NAME "_isp"
@@ -62,7 +62,10 @@ static const struct rkisp1_isp_mbus_info rkisp1_isp_formats[] = {
 	{
 		.mbus_code	= MEDIA_BUS_FMT_YUYV8_2X8,
 		.fmt_type	= RKISP1_FMT_YUV,
+		.mipi_dt	= RKISP1_CIF_CSI2_DT_YUV422_8b,
+		.yuv_seq	= RKISP1_CIF_ISP_ACQ_PROP_CBYCRY,
 		.direction	= RKISP1_DIR_SRC,
+		.bus_width	= 8,
 	}, {
 		.mbus_code	= MEDIA_BUS_FMT_SRGGB10_1X10,
 		.fmt_type	= RKISP1_FMT_BAYER,
