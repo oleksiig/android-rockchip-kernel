@@ -1280,7 +1280,6 @@ static void rkisp1_params_config_parameter(struct rkisp1_params *params)
 {
 	struct rkisp1_cif_isp_hst_config hst = rkisp1_hst_params_default_config;
 
-	spin_lock(&params->config_lock);
 
 	rkisp1_awb_meas_config(params, &rkisp1_awb_params_default_config);
 	rkisp1_awb_meas_enable(params, &rkisp1_awb_params_default_config,
@@ -1310,7 +1309,6 @@ static void rkisp1_params_config_parameter(struct rkisp1_params *params)
 	rkisp1_isp_isr_other_config(params, &params->cur_params);
 	rkisp1_isp_isr_meas_config(params, &params->cur_params);
 
-	spin_unlock(&params->config_lock);
 }
 
 /* Not called when the camera active, thus not isr protection. */
