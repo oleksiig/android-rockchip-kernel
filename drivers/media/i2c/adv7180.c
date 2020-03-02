@@ -1087,6 +1087,8 @@ static int adv7182_select_input(struct adv7180_state *state, unsigned int input)
 		adv7180_write(state, ADV7180_REG_AGC_ADJ2, 0x00);
 	}
 
+	state->input = input;
+
 	return 0;
 }
 
