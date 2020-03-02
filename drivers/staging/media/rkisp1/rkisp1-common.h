@@ -13,6 +13,7 @@
 
 #include <linux/clk.h>
 #include <linux/mutex.h>
+#include <linux/irqreturn.h>
 #include <media/media-device.h>
 #include <media/media-entity.h>
 #include <media/v4l2-ctrls.h>
@@ -34,8 +35,8 @@
 #define RKISP1_RSZ_SRC_MIN_WIDTH		32
 #define RKISP1_RSZ_SRC_MIN_HEIGHT		16
 
-#define RKISP1_DEFAULT_WIDTH		800
-#define RKISP1_DEFAULT_HEIGHT		600
+#define RKISP1_DEFAULT_WIDTH		720
+#define RKISP1_DEFAULT_HEIGHT		240
 
 #define RKISP1_DRIVER_NAME	"rkisp1"
 #define RKISP1_BUS_INFO		"platform:" RKISP1_DRIVER_NAME
