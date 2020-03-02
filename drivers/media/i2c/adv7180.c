@@ -483,10 +483,10 @@ static void adv7180_set_power_pin(struct adv7180_state *state, bool on)
 		return;
 
 	if (on) {
-		gpiod_set_value_cansleep(state->pwdn_gpio, 0);
+		gpiod_set_value_cansleep(state->pwdn_gpio, 1);
 		usleep_range(5000, 10000);
 	} else {
-		gpiod_set_value_cansleep(state->pwdn_gpio, 1);
+		gpiod_set_value_cansleep(state->pwdn_gpio, 0);
 	}
 }
 
@@ -1344,7 +1344,7 @@ static int adv7180_probe(struct i2c_client *client,
 	state->chip_info = (struct adv7180_chip_info *)id->driver_data;
 
 	state->pwdn_gpio = devm_gpiod_get_optional(&client->dev, "powerdown",
-						   GPIOD_OUT_HIGH);
+						   GPIOD_OUT_LOW);
 	if (IS_ERR(state->pwdn_gpio)) {
 		ret = PTR_ERR(state->pwdn_gpio);
 		v4l_err(client, "request for power pin failed: %d\n", ret);
