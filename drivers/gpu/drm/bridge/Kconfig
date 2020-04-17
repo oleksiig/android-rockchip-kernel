@@ -158,6 +158,17 @@ config DRM_TI_SN65DSI86
 	help
 	  Texas Instruments SN65DSI86 DSI to eDP Bridge driver
 
+config DRM_TI_SN65DSI83
+	tristate "TI SN65DSI83 MIPI® DSI to FlatLink™ LVDS bridge"
+	depends on OF
+	select DRM_PANEL
+	select DRM_KMS_HELPER
+	select REGMAP_I2C
+	select DRM_MIPI_DSI
+	---help---
+	  Texas Instruments SN65DSI83 MIPI® DSI Bridge to FlatLink™ LVDS
+	  Single-Channel DSI to Single-Link LVDS Bridge
+
 source "drivers/gpu/drm/bridge/analogix/Kconfig"
 
 source "drivers/gpu/drm/bridge/adv7511/Kconfig"
