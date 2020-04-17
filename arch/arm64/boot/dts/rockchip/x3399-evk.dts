@@ -136,7 +136,7 @@
     };
 
 /* ------------------------------------------------------------------ */
-    backlight: lvds-backlight {
+    lvds_panel_backlight: lvds-backlight {
         compatible = "pwm-backlight";
         pwms = <&pwm0 0 25000 0>;
         vin-supply = <&vcc5v0_sys>;
@@ -158,6 +158,40 @@
             224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239
             240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255>;
         default-brightness-level = <200>;
+    };
+
+    lvds_panel {
+        compatible = "panel-lvds";
+        status = "okay";
+
+        backlight = <&lvds_panel_backlight>;
+        power-supply = <&lvds_panel_reg>;
+
+        width-mm = <176>;
+        height-mm = <99>;
+        data-mapping = "jeida-24";
+
+        panel-timing {
+            clock-frequency = <60000000>;
+            hactive = <1024>;
+            vactive = <600>;
+            hback-porch = <160>;
+            hfront-porch = <160>;
+            vback-porch = <17>;
+            vfront-porch = <17>;
+            hsync-len = <4>;
+            vsync-len = <1>;
+            hsync-active = <0>;
+            vsync-active = <0>;
+            de-active = <1>;
+            pixelclk-active = <0>;
+        };
+
+        port {
+            lvds_panel_in: endpoint {
+                remote-endpoint = <&bridge_lvds_out>;
+            };
+        };
     };
 
 /* ------------------------------------------------------------------ */
@@ -550,17 +584,12 @@
     status = "okay";
     clock-frequency = <100000>;
 
-    sn65dsi83: dsi-lvds@2c {
+    sn65dsi83_i2c: dsi-lvds-bridge@2c {
         compatible = "ti,sn65dsi83";
         reg = <0x2c>;
-
-        pinctrl-names = "default";
-        pinctrl-0 = <&sn65dsi83_en_gpio>;
-
+        enable-gpios = <&gpio2 RK_PD2 GPIO_ACTIVE_HIGH>;
         interrupt-parent = <&gpio0>;
         interrupts = <RK_PA4 IRQ_TYPE_EDGE_RISING>;
-        enable-gpio = <&gpio2 RK_PD2 GPIO_ACTIVE_HIGH>;
-        dsi-host = <&mipi_dsi>;
     };
 
     gt911@5d {
@@ -859,52 +888,45 @@
             #address-cells = <1>;
             #size-cells = <0>;
 
-            mipi_out_panel: endpoint {
-                remote-endpoint = <&panel_in_mipi>;
+            mipi_host_out: endpoint {
+                remote-endpoint = <&bridge_mipi_in>;
             };
         };
     };
 
-    panel {
-        compatible ="simple-panel-dsi";
+    bridge {
+        compatible ="ti,sn65dsi83";
         reg = <0>;
-
-        backlight = <&backlight>;
-        power-supply = <&lvds_panel_reg>;
-
-        status = "okay";
 
         dsi,flags = <(MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST |
                       MIPI_DSI_MODE_VIDEO_SYNC_PULSE)>;
         dsi,format = <MIPI_DSI_FMT_RGB888>;
         dsi,lanes = <4>;
 
-        display-width = <176>;
-        display-height = <99>;
-        display-bpc = <8>;
+        i2c,client = <&sn65dsi83_i2c>;
 
-        display-timings {
-            native-mode = <&timing0>;
-            timing0: timing0 {
-                clock-frequency = <60000000>;
-                hactive = <1024>;
-                vactive = <600>;
-                hback-porch = <160>;
-                hfront-porch = <160>;
-                vback-porch = <17>;
-                vfront-porch = <17>;
-                hsync-len = <4>;
-                vsync-len = <1>;
-                hsync-active = <0>;
-                vsync-active = <0>;
-                de-active = <1>;
-                pixelclk-active = <0>;
+        ports {
+            #address-cells = <1>;
+            #size-cells = <0>;
+
+            bridge_in: port@0 {
+                reg = <0>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+
+                bridge_mipi_in: endpoint {
+                    remote-endpoint = <&mipi_host_out>;
+                };
             };
-        };
 
-        port {
-            panel_in_mipi: endpoint {
-                remote-endpoint = <&mipi_out_panel>;
+            bridge_out: port@1 {
+                reg = <1>;
+                #address-cells = <1>;
+                #size-cells = <0>;
+
+                bridge_lvds_out: endpoint {
+                    remote-endpoint = <&lvds_panel_in>;
+                };
             };
         };
     };
