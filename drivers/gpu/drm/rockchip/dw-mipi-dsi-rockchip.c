@@ -289,7 +289,7 @@ struct dw_mipi_dsi {
 	struct drm_encoder encoder;
 	struct drm_connector connector;
 	struct mipi_dsi_host dsi_host;
-	struct drm_panel *panel;
+	struct drm_bridge *panel_bridge;
 	struct device *dev;
 	struct regmap *grf_regmap;
 	void __iomem *base;
@@ -579,6 +579,8 @@ static int dw_mipi_dsi_host_attach(struct mipi_dsi_host *host,
 				   struct mipi_dsi_device *device)
 {
 	struct dw_mipi_dsi *dsi = host_to_dsi(host);
+	struct drm_bridge *bridge = NULL;
+	int ret;
 
 	if (device->lanes > dsi->pdata->max_data_lanes) {
 		dev_err(dsi->dev, "the number of data lanes(%u) is too many\n",
@@ -590,19 +592,30 @@ static int dw_mipi_dsi_host_attach(struct mipi_dsi_host *host,
 	dsi->channel = device->channel;
 	dsi->format = device->format;
 	dsi->mode_flags = device->mode_flags;
-	dsi->panel = of_drm_find_panel(device->dev.of_node);
-	if (dsi->panel)
-		return drm_panel_attach(dsi->panel, &dsi->connector);
 
-	return -EINVAL;
+	ret = drm_of_find_panel_or_bridge(host->dev->of_node, 1, 0,
+					  NULL, &bridge);
+	if (ret)
+		return ret;
+
+	ret = drm_bridge_attach(&dsi->encoder, bridge, NULL);
+	if(ret) {
+		DRM_ERROR("failed to attach bridge\n");
+		return ret;
+	}
+
+	dsi->panel_bridge = bridge;
+	return 0;
 }
 
 static int dw_mipi_dsi_host_detach(struct mipi_dsi_host *host,
 				   struct mipi_dsi_device *device)
 {
 	struct dw_mipi_dsi *dsi = host_to_dsi(host);
+	struct drm_bridge *bridge = dsi->panel_bridge;
 
-	drm_panel_detach(dsi->panel);
+	if(bridge && bridge->funcs && bridge->funcs->detach)
+		bridge->funcs->detach(bridge);
 
 	return 0;
 }
@@ -938,10 +951,7 @@ static void dw_mipi_dsi_encoder_disable(struct drm_encoder *encoder)
 		return;
 	}
 
-	drm_panel_disable(dsi->panel);
-
 	dw_mipi_dsi_set_mode(dsi, DW_MIPI_DSI_CMD_MODE);
-	drm_panel_unprepare(dsi->panel);
 
 	dw_mipi_dsi_disable(dsi);
 	pm_runtime_put(dsi->dev);
@@ -1002,11 +1012,8 @@ static void dw_mipi_dsi_encoder_enable(struct drm_encoder *encoder)
 	dw_mipi_dsi_wait_for_two_frames(mode);
 
 	dw_mipi_dsi_set_mode(dsi, DW_MIPI_DSI_CMD_MODE);
-	if (drm_panel_prepare(dsi->panel))
-		dev_err(dsi->dev, "failed to prepare panel\n");
 
 	dw_mipi_dsi_set_mode(dsi, DW_MIPI_DSI_VID_MODE);
-	drm_panel_enable(dsi->panel);
 
 	clk_disable_unprepare(dsi->pclk);
 
@@ -1063,9 +1070,7 @@ static const struct drm_encoder_funcs dw_mipi_dsi_encoder_funcs = {
 
 static int dw_mipi_dsi_connector_get_modes(struct drm_connector *connector)
 {
-	struct dw_mipi_dsi *dsi = con_to_dsi(connector);
-
-	return drm_panel_get_modes(dsi->panel);
+	return -EOPNOTSUPP;
 }
 
 static struct drm_connector_helper_funcs dw_mipi_dsi_connector_helper_funcs = {
@@ -1282,10 +1287,12 @@ static int dw_mipi_dsi_bind(struct device *dev, struct device *master,
 		goto err_cleanup;
 	}
 
-	if (!dsi->panel) {
+	if (!dsi->panel_bridge) {
 		ret = -EPROBE_DEFER;
 		goto err_mipi_dsi_host;
 	}
+
+	dsi->panel_bridge->dev = drm;
 
 	dev_set_drvdata(dev, dsi);
 	pm_runtime_enable(dev);
