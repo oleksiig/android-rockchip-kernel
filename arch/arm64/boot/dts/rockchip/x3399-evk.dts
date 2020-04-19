@@ -800,6 +800,13 @@
     pinctrl-names = "default";
     pinctrl-0 = <&uart1_xfer>;
     status = "okay";
+
+    gnss {
+        compatible = "u-blox,neo-m8";
+        current-speed = <9600>;
+        v-bckp-supply = <&vcc3v3_s5>;
+        vcc-supply = <&vcc3v3_sys>;
+    };
 };
 
 &uart2 {
