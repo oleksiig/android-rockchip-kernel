@@ -663,7 +663,7 @@
             rockchip,pins = <4 RK_PD6 GPIO_ACTIVE_HIGH &pcfg_pull_none>;
         };
 
-        bt_en_gpio: bt-en-gpio {
+        bluetooth_en_gpio: bluetooth-en-gpio {
             rockchip,pins = <4 RK_PD4 GPIO_ACTIVE_HIGH &pcfg_pull_none>;
         };
 
@@ -792,8 +792,16 @@
 /* UART -------------------------------------------------------------- */
 &uart0 {
     pinctrl-names = "default";
-    pinctrl-0 = <&uart0_xfer &uart0_rts &uart0_cts>;
+    pinctrl-0 = <&uart0_xfer &uart0_rts &uart0_cts &bluetooth_en_gpio>;
     status = "okay";
+
+    bluetooth {
+        compatible = "ti,wl1831-st";
+        max-speed = <3000000>;
+        clocks = <&rk808 1>;
+        clock-names = "ext_clock";
+        enable-gpio = <&gpio4 RK_PD4 GPIO_ACTIVE_HIGH>;
+    };
 };
 
 &uart1 {
