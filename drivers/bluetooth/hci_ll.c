@@ -488,14 +488,6 @@ static int send_command_from_firmware(struct ll_device *lldev,
 {
 	struct sk_buff *skb;
 
-	if (cmd->opcode == HCI_VS_UPDATE_UART_HCI_BAUDRATE) {
-		/* ignore remote change
-		 * baud rate HCI VS command
-		 */
-		bt_dev_warn(lldev->hu.hdev,
-			    "change remote baud rate command in firmware");
-		return 0;
-	}
 	if (cmd->prefix != 1)
 		bt_dev_dbg(lldev->hu.hdev, "command type %d", cmd->prefix);
 
@@ -506,6 +498,12 @@ static int send_command_from_firmware(struct ll_device *lldev,
 		return PTR_ERR(skb);
 	}
 	kfree_skb(skb);
+	
+	if (cmd->opcode == HCI_VS_UPDATE_UART_HCI_BAUDRATE) {
+		serdev_device_set_baudrate(lldev->serdev, cmd->speed);
+		bt_dev_warn(lldev->hu.hdev,
+			    "firmware changed baud rate to %d", cmd->speed);
+	}
 	return 0;
 }
 
@@ -619,6 +617,7 @@ static int ll_setup(struct hci_uart *hu)
 
 	hu->hdev->set_bdaddr = ll_set_bdaddr;
 
+	serdev_device_set_baudrate(serdev, 115200);
 	serdev_device_set_flow_control(serdev, true);
 
 	do {
@@ -754,6 +753,8 @@ static int hci_ti_probe(struct serdev_device *serdev)
 		baswap(&lldev->bdaddr, bdaddr);
 		kfree(bdaddr);
 	}
+
+	set_bit(HCI_QUIRK_NON_PERSISTENT_SETUP, &hu->hdev_flags);
 
 	return hci_uart_register_device(hu, &llp);
 }
