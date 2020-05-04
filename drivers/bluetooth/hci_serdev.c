@@ -115,21 +115,41 @@ static int hci_uart_flush(struct hci_dev *hdev)
 /* Initialize device */
 static int hci_uart_open(struct hci_dev *hdev)
 {
-	BT_DBG("%s %p", hdev->name, hdev);
+	int err;
+	struct hci_uart *hu = hci_get_drvdata(hdev);
+
+	BT_DBG("open %s hdev %p", hdev->name, hdev);
+
+	err = serdev_device_open(hu->serdev);
+	if (err)
+		return err;
+
+	err = hu->proto->open(hu);
+	if (err)
+		return err;
 
 	/* Undo clearing this from hci_uart_close() */
 	hdev->flush = hci_uart_flush;
 
-	return 0;
+	return err;
 }
 
 /* Close device */
 static int hci_uart_close(struct hci_dev *hdev)
 {
-	BT_DBG("hdev %p", hdev);
+	int err;
+	struct hci_uart *hu = hci_get_drvdata(hdev);
+
+	BT_DBG("close %s hdev %p", hdev->name, hdev);
 
 	hci_uart_flush(hdev);
 	hdev->flush = NULL;
+
+	err = hu->proto->close(hu);
+	if (err)
+		return err;
+
+	serdev_device_close(hu->serdev);
 
 	return 0;
 }
@@ -275,14 +295,6 @@ int hci_uart_register_device(struct hci_uart *hu,
 
 	serdev_device_set_client_ops(hu->serdev, &hci_serdev_client_ops);
 
-	err = serdev_device_open(hu->serdev);
-	if (err)
-		return err;
-
-	err = p->open(hu);
-	if (err)
-		goto err_open;
-
 	hu->proto = p;
 	set_bit(HCI_UART_PROTO_READY, &hu->flags);
 
@@ -323,6 +335,9 @@ int hci_uart_register_device(struct hci_uart *hu,
 	if (test_bit(HCI_UART_EXT_CONFIG, &hu->hdev_flags))
 		set_bit(HCI_QUIRK_EXTERNAL_CONFIG, &hdev->quirks);
 
+	if (test_bit(HCI_QUIRK_NON_PERSISTENT_SETUP, &hu->hdev_flags))
+		set_bit(HCI_QUIRK_NON_PERSISTENT_SETUP, &hdev->quirks);
+
 	if (test_bit(HCI_UART_CREATE_AMP, &hu->hdev_flags))
 		hdev->dev_type = HCI_AMP;
 	else
@@ -345,9 +360,6 @@ err_register:
 	hci_free_dev(hdev);
 err_alloc:
 	clear_bit(HCI_UART_PROTO_READY, &hu->flags);
-	p->close(hu);
-err_open:
-	serdev_device_close(hu->serdev);
 	return err;
 }
 EXPORT_SYMBOL_GPL(hci_uart_register_device);
