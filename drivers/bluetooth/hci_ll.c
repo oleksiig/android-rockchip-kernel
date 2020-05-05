@@ -133,6 +133,7 @@ static int ll_open(struct hci_uart *hu)
 			clk_prepare_enable(lldev->ext_clk);
 	}
 
+	bt_dev_info(hu->hdev, "open()");
 	return 0;
 }
 
@@ -173,6 +174,7 @@ static int ll_close(struct hci_uart *hu)
 
 	kfree(ll);
 
+	bt_dev_info(hu->hdev, "close()");
 	return 0;
 }
 
@@ -534,6 +536,8 @@ static int download_firmware(struct ll_device *lldev)
 	snprintf(bts_scr_name, sizeof(bts_scr_name),
 		 "ti-connectivity/TIInit_%d.%d.%d.bts",
 		 chip, maj_ver, min_ver);
+
+	bt_dev_info(lldev->hu.hdev, "Using FW: %s", bts_scr_name);
 
 	err = request_firmware(&fw, bts_scr_name, &lldev->serdev->dev);
 	if (err || !fw->data || !fw->size) {
