@@ -9,7 +9,7 @@
 #include <dt-bindings/display/drm_mipi_dsi.h>
 
 #include "x3399-module.dtsi"
-#include "x3399-evk-android-fstab.dtsi"
+#include "x3399-android-fstab.dtsi"
 
 / {
     model = "X3399 Evaluation Kit";
