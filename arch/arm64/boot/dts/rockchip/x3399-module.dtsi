@@ -166,14 +166,6 @@
     disable-wp;
 };
 
-&pwm0 {
-    status = "okay";
-};
-
-&pwm2 {
-    status = "okay";
-};
-
 &pmu_io_domains {
     status = "okay";
 
@@ -185,7 +177,6 @@
 
     bt656-supply = <&vcc_1v8>;          /* APIO2_VDD */
     audio-supply = <&vcca1v8_codec>;    /* APIO5_VDD */
-    sdmmc-supply = <&vcc3v0_sd_slot>;   /* SDMMC0_VDD */
     gpio1830-supply = <&vcc_3v0>;       /* APIO4_VDD */
 };
 
@@ -411,10 +402,6 @@
             regulator-off-in-suspend;
         };
     };
-};
-
-&i2c3 {
-    status = "okay";
 };
 
 &pinctrl {
