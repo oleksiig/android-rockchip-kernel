@@ -43,18 +43,18 @@ static struct snd_soc_dai_driver bt_sco_dai[] = {
 		.playback = {
 			.stream_name = "Playback",
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 2,
 			.rates = SNDRV_PCM_RATE_8000 | SNDRV_PCM_RATE_16000,
 			.formats = SNDRV_PCM_FMTBIT_S16_LE,
 		},
 		.capture = {
 			 .stream_name = "Capture",
 			.channels_min = 1,
-			.channels_max = 1,
+			.channels_max = 2,
 			.rates = SNDRV_PCM_RATE_8000 | SNDRV_PCM_RATE_16000,
 			.formats = SNDRV_PCM_FMTBIT_S16_LE,
 		},
-	}
+	},
 };
 
 static const struct snd_soc_component_driver soc_component_dev_bt_sco = {
