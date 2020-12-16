@@ -158,7 +158,27 @@
     };
 
 /* ------------------------------------------------------------------ */
+    bt_sco_codec: bt-sco-codec {
+        compatible = "linux,bt-sco";
+        #sound-dai-cells = <1>;
+    };
 
+    bt_sco_sound {
+        compatible = "simple-audio-card";
+        simple-audio-card,name = "Bluetooth SCO";
+        simple-audio-card,format = "i2s";
+        simple-audio-card,mclk-fs = <256>;
+        simple-audio-card,bitclock-master = <&sound_master>;
+        simple-audio-card,frame-master = <&sound_master>;
+
+        sound_master: simple-audio-card,cpu {
+            sound-dai = <&i2s1>;
+        };
+
+        simple-audio-card,codec {
+            sound-dai = <&bt_sco_codec 1>; /* bt-sco-pcm-wb */
+        };
+    };
 };
 
 &pwm0 {
