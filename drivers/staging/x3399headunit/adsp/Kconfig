@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0
+
+if X3399HEADUNIT
+
+config X3399HEADUNIT_STA309A
+    tristate "X3399 headunit ADSP STA309A driver"
+    help
+      Enable support of audio DSP in configuration
+      of x3399 based headunit board.
+
+endif
