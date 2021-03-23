@@ -446,6 +446,14 @@
 
 &spi1 {
     status = "okay";
+    lsm6dsm@0 {
+        compatible = "st,lsm6ds3h";
+        reg = <0>;
+        spi-max-frequency = <1000000>;
+        interrupt-parent = <&gpio1>;
+        interrupts = <RK_PB5 IRQ_TYPE_EDGE_RISING>;
+        st,drdy-int-pin = <1>; /*INT1*/
+    };
 };
 
 /* USB -------------------------------------------------------------- */
