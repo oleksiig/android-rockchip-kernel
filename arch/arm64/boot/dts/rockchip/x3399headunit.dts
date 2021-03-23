@@ -332,6 +332,18 @@
             };
         };
     };
+
+    stm32l052@38 {
+        compatible = "x3399-headunit,mcu";
+        reg = <0x38>;
+
+        pinctrl-names = "default";
+        pinctrl-0 = <&mcu_irq_gpio>;
+
+        interrupt-parent = <&gpio3>;
+        interrupts = <RK_PA6 IRQ_TYPE_EDGE_FALLING>;
+        interrupt-names = "mcu-irq";
+    };
 };
 
 &pinctrl {
@@ -422,6 +434,12 @@
 
         si46xx_irq_gpio: si46xx-irq-gpio {
             rockchip,pins = <3 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>;
+        };
+    };
+
+    mcu {
+        mcu_irq_gpio: mcu-irq-gpio {
+            rockchip,pins = <3 RK_PA6 RK_FUNC_GPIO &pcfg_pull_none>;
         };
     };
 };
