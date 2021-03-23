@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+if X3399HEADUNIT
+
+config X3399HEADUNIT_SI468X_I2C
+	tristate "X3399 headunit radio Si4689 I2C driver"
+	help
+	  Enable support of radio functionality on x3399 based headunit board.
+
+endif
