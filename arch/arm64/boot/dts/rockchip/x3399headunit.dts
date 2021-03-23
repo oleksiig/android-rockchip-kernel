@@ -163,7 +163,7 @@
         #sound-dai-cells = <1>;
     };
 
-    bluetooth_sco_sound: sound_card@0 {
+    bluetooth_sco_sound: sound_card@1 {
         compatible = "simple-audio-card";
         simple-audio-card,name = "Bluetooth SCO";
         simple-audio-card,format = "i2s";
@@ -180,7 +180,7 @@
         };
     };
 
-    main_sound: sound_card@1 {
+    main_sound: sound_card@0 {
         compatible = "simple-audio-card";
         simple-audio-card,name = "HeadUnit Sound";
         simple-audio-card,format = "i2s";
@@ -251,13 +251,16 @@
     };
 
     sta309a: sta309a@20 {
-        compatible = "st,sta309a";
+        compatible = "x3399-headunit,sta309a";
         reg = <0x20>;
+
+        clocks = <&cru SCLK_I2S_8CH_OUT>;
+        clock-names = "mclk";
 
         pinctrl-names = "default";
         pinctrl-0 = <&sta309a_reset_gpio &sta309a_powerdown_gpio>;
 
-        powerdown-gpios = <&gpio3 RK_PA1 GPIO_ACTIVE_HIGH>;
+        powerdown-gpios = <&gpio3 RK_PA1 GPIO_ACTIVE_LOW>;
         reset-gpios = <&gpio3 RK_PA0 GPIO_ACTIVE_LOW>;
 
         #sound-dai-cells = <0>;
