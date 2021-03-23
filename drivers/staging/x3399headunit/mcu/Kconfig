@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+if X3399HEADUNIT
+
+config X3399HEADUNIT_MCU
+    tristate "X3399 headunit MCU input and power management driver"
+    help
+      Enable HW keys, encoders and extended power managemet support.
+
+endif
