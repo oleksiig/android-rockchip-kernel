@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+menuconfig X3399HEADUNIT
+	bool "X3399 module based headunit board drivers set"
+	default n
+	help
+	 Enable support of audio DSP, MCU and radio support.
+
+if X3399HEADUNIT
+
+source "drivers/staging/x3399headunit/adsp/Kconfig"
+source "drivers/staging/x3399headunit/radio/Kconfig"
+source "drivers/staging/x3399headunit/mcu/Kconfig"
+
+endif
