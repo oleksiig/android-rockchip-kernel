@@ -157,26 +157,44 @@
         };
     };
 
-/* ------------------------------------------------------------------ */
-    bt_sco_codec: bt-sco-codec {
+/* ------------------------------------------------------------------ */ 
+    wl18xx_sco: bt-sco {
         compatible = "linux,bt-sco";
         #sound-dai-cells = <1>;
     };
 
-    bt_sco_sound {
+    bluetooth_sco_sound: sound_card@0 {
         compatible = "simple-audio-card";
         simple-audio-card,name = "Bluetooth SCO";
         simple-audio-card,format = "i2s";
         simple-audio-card,mclk-fs = <256>;
-        simple-audio-card,bitclock-master = <&sound_master>;
-        simple-audio-card,frame-master = <&sound_master>;
 
-        sound_master: simple-audio-card,cpu {
+        i2s1_port: simple-audio-card,cpu {
             sound-dai = <&i2s1>;
         };
 
         simple-audio-card,codec {
-            sound-dai = <&bt_sco_codec 1>; /* bt-sco-pcm-wb */
+            sound-dai = <&wl18xx_sco 1>; /* bt-sco-pcm-wb */
+            bitclock-master;
+            frame-master;
+        };
+    };
+
+    main_sound: sound_card@1 {
+        compatible = "simple-audio-card";
+        simple-audio-card,name = "HeadUnit Sound";
+        simple-audio-card,format = "i2s";
+        simple-audio-card,mclk-fs = <256>;
+        simple-audio-card,aux-devs = <&tas6424>;
+
+        i2s0_port: simple-audio-card,cpu {
+            sound-dai = <&i2s0>;
+            bitclock-master;
+            frame-master;
+        };
+
+        simple-audio-card,codec@0 {
+            sound-dai = <&sta309a>;
         };
     };
 };
@@ -518,7 +536,7 @@
     status = "okay";
 
     pinctrl-names = "default";
-    pinctrl-0 = <&i2s0_8ch_bus>;
+    pinctrl-0 = <&i2s0_mclk>, <&i2s0_2ch_bus>;
 
     rockchip,playback-channels = <2>;
     rockchip,capture-channels = <2>;
