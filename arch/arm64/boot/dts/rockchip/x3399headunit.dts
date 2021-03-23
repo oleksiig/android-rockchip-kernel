@@ -266,8 +266,8 @@
         #sound-dai-cells = <0>;
     };
 
-    si46xx: si46xx@64 {
-        compatible = "si,si46xx";
+    si468x: si468x@64 {
+        compatible = "x3399-headunit,si468x";
         reg = <0x64>;
 
         pinctrl-names = "default";
