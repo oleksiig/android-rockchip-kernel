@@ -9,6 +9,9 @@
 #include "rk3399-opp.dtsi"
 
 / {
+    model = "X3399 based module";
+    compatible = "rockchip,x3399", "rockchip,rk3399";
+
 /* ------------------------------------------------------------------ */
     /* Standby supply 3.3v */
     vcc3v3_s5: vcc3v3-s5 {
