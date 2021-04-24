@@ -12,6 +12,26 @@
     model = "X3399 based module";
     compatible = "rockchip,x3399", "rockchip,rk3399";
 
+    memory@10000000 {
+        device_type = "memory";
+        /* Full range:      0x00000000 - 0xf7ffffff */
+        /* Reserved for BL: 0x00000000 - 0x0fffffff */
+        /* Linux available: 0x10000000 - 0xE7ffffff */
+        reg = <0x0 0x10000000 0x0 0xE8000000>; /* 3712MB */
+    };
+
+    reserved-memory {
+        #address-cells = <2>;
+        #size-cells = <2>;
+        ranges;
+
+        linux,cma@10000000 {
+            compatible = "shared-dma-pool";
+            reg = <0x0 0x10000000 0x0 0x02000000>; /* 32MB */
+            linux,cma-default;
+        };
+    };
+
 /* ------------------------------------------------------------------ */
     /* Standby supply 3.3v */
     vcc3v3_s5: vcc3v3-s5 {
