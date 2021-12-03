@@ -842,6 +842,13 @@ struct drm_set_client_cap {
 	__u64 value;
 };
 
+/**
+ * DRM_CLIENT_CAP_SHARE_PLANES
+ *
+ * If set to 1, the DRM core will expose share planes to userspace.
+ */
+#define DRM_CLIENT_CAP_SHARE_PLANES	6
+
 #define DRM_RDWR O_RDWR
 #define DRM_CLOEXEC O_CLOEXEC
 struct drm_prime_handle {
