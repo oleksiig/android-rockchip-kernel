@@ -491,21 +491,6 @@ static void rk805_device_shutdown_prepare(void)
 		dev_err(&rk808_i2c_client->dev, "Failed to shutdown device!\n");
 }
 
-static void rk808_device_shutdown(void)
-{
-	int ret;
-	struct rk808 *rk808 = i2c_get_clientdata(rk808_i2c_client);
-
-	if (!rk808)
-		return;
-
-	ret = regmap_update_bits(rk808->regmap,
-				 RK808_DEVCTRL_REG,
-				 DEV_OFF_RST, DEV_OFF_RST);
-	if (ret)
-		dev_err(&rk808_i2c_client->dev, "Failed to shutdown device!\n");
-}
-
 static void rk818_device_shutdown(void)
 {
 	int ret;
@@ -526,15 +511,33 @@ static void rk8xx_syscore_shutdown(void)
 	struct rk808 *rk808 = i2c_get_clientdata(rk808_i2c_client);
 	int ret;
 
-	if (system_state == SYSTEM_POWER_OFF &&
-	    (rk808->variant == RK809_ID || rk808->variant == RK817_ID)) {
-		ret = regmap_update_bits(rk808->regmap,
+	if (!rk808)
+		return;
+
+	if (system_state == SYSTEM_POWER_OFF) {
+		dev_info(&rk808_i2c_client->dev, "%s(SYSTEM_POWER_OFF)\n", __func__);
+		switch (rk808->variant) {
+			case RK808_ID: {
+				ret = regmap_update_bits(rk808->regmap,
+					RK808_DEVCTRL_REG,
+					DEV_OFF_RST,
+					DEV_OFF_RST);
+				if (ret)
+					dev_err(&rk808_i2c_client->dev, "Failed to shutdown device!\n");
+				break;
+			}
+			case RK809_ID:
+			case RK817_ID: {
+				ret = regmap_update_bits(rk808->regmap,
 					 RK817_SYS_CFG(3),
 					 RK817_SLPPIN_FUNC_MSK,
 					 SLPPIN_DN_FUN);
-		if (ret) {
-			dev_warn(&rk808_i2c_client->dev,
-				 "Cannot switch to power down function\n");
+				if (ret) {
+					dev_warn(&rk808_i2c_client->dev,
+						"Cannot switch to power down function\n");
+				}
+				break;
+			}
 		}
 	}
 }
@@ -616,7 +619,7 @@ static int rk808_probe(struct i2c_client *client,
 		nr_pre_init_regs = ARRAY_SIZE(rk808_pre_init_reg);
 		cells = rk808s;
 		nr_cells = ARRAY_SIZE(rk808s);
-		rk808->pm_pwroff_fn = rk808_device_shutdown;
+		register_syscore_ops(&rk808_syscore_ops);
 		break;
 	case RK818_ID:
 		rk808->regmap_cfg = &rk818_regmap_config;
