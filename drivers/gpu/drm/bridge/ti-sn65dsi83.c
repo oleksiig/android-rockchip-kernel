@@ -249,9 +249,25 @@ static void sn65dsi83_bridge_enable(struct drm_bridge *bridge)
     regmap_write(i2c_ctx->regmap, DSI83_PLL_DIV, 0x18); // Divide DSI_CLK by 4.
 //  regmap_write(i2c_ctx->regmap, DSI83_PLL_DIV, 0x00);  // Multiply REFCLK by 1.
 
-    /* 4xDSI lanes with single channel */
     /* 0x10 */
-    regmap_write(i2c_ctx->regmap, DSI83_DSI_CFG, 0x26);
+    /* 0 – Single bit errors are tolerated for the start of transaction SoT leader sequence (default): 0 */
+    /* 2-1 Reserved  : 3 */
+    /* 3-4 DSI lanes : 4*/
+    val = 0x26;
+    if(ctx->dsi->lanes == 4) {
+        val = 0x26 | (0x0 << 3);
+    } else if(ctx->dsi->lanes == 3) {
+        val = 0x26 | (0x1 << 3);
+    } else if(ctx->dsi->lanes == 2) {
+        val = 0x26 | (0x2 << 3);
+    } else if(ctx->dsi->lanes == 1) {
+        val = 0x26 | (0x3 << 3);
+    } else {
+        dev_err(ctx->dev, "enable(): unsupported dsi_lanes:%d, using defaults 4\n",
+            ctx->dsi->lanes);
+    }
+
+    regmap_write(i2c_ctx->regmap, DSI83_DSI_CFG, val);
 
     /* 0x11 */
     regmap_write(i2c_ctx->regmap, DSI83_DSI_EQ, 0x00);
