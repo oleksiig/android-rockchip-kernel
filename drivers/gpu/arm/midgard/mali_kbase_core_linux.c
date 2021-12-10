@@ -106,6 +106,9 @@ static struct kbase_exported_test_data shared_kernel_test_data;
 EXPORT_SYMBOL(shared_kernel_test_data);
 #endif /* MALI_UNIT_TEST */
 
+/** rk_ext : version of rk_ext on mali_ko, aka. rk_ko_ver. */
+#define ROCKCHIP_VERSION    (13)
+
 static int kbase_dev_nr;
 
 static DEFINE_MUTEX(kbase_dev_list_lock);
@@ -671,6 +674,7 @@ copy_failed:
 			/* version buffer size check is made in compile time assert */
 			memcpy(get_version->version_buffer, KERNEL_SIDE_DDK_VERSION_STRING, sizeof(KERNEL_SIDE_DDK_VERSION_STRING));
 			get_version->version_string_size = sizeof(KERNEL_SIDE_DDK_VERSION_STRING);
+			get_version->rk_version = ROCKCHIP_VERSION;
 			break;
 		}
 
