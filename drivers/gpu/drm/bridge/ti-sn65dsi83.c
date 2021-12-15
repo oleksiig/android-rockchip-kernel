@@ -333,7 +333,9 @@ static void sn65dsi83_bridge_enable(struct drm_bridge *bridge)
     /*
      * TEST PATTERN GENERATION PURPOSE ONLY
      */
-#if 0
+#ifdef CONFIG_DRM_TI_SN65DSI83_TEST_PATTERN
+    dev_warn(ctx->dev, "!!! TEST PATTERN GENERATION ENABLED !!!\n");
+
     /* 0x24, 0x25 */
     sn65dsi83_write_u16(i2c_ctx, DSI83_CHA_VERT_LINES_LO, mode->vdisplay);
 
