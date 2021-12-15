@@ -169,6 +169,13 @@ config DRM_TI_SN65DSI83
 	  Texas Instruments SN65DSI83 MIPI® DSI Bridge to FlatLink™ LVDS
 	  Single-Channel DSI to Single-Link LVDS Bridge
 
+config DRM_TI_SN65DSI83_TEST_PATTERN
+	bool "TI SN65DSI83 LVDS Test Pattern Generation"
+	depends on DRM_TI_SN65DSI83
+	---help---
+	  This feature can be used to test the LVDS output path
+	  and LVDS panels in a system platform.
+
 source "drivers/gpu/drm/bridge/analogix/Kconfig"
 
 source "drivers/gpu/drm/bridge/adv7511/Kconfig"
