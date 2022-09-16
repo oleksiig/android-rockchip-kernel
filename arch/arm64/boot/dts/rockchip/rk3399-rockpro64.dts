@@ -562,6 +562,20 @@
 		vbus-supply = <&vcc5v0_typec>;
 		status = "okay";
 	};
+
+	touch_screen: touchscreen@5d {
+		compatible = "goodix,gt911";
+		status = "okay";
+		reg = <0x5d>;
+
+		interrupt-parent = <&gpio4>;
+		interrupts = <RK_PD5 IRQ_TYPE_EDGE_FALLING>;
+		irq-gpios = <&gpio4 RK_PD5 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio4 RK_PD6 GPIO_ACTIVE_HIGH>;
+
+		AVDD28-supply = <&vcc3v0_touch>;
+		VDDIO-supply = <&vcc3v0_touch>;
+	};
 };
 
 &i2s0 {
