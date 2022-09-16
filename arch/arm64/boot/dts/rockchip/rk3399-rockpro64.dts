@@ -9,6 +9,7 @@
 #include <dt-bindings/pwm/pwm.h>
 #include "rk3399.dtsi"
 #include "rk3399-opp.dtsi"
+#include "rk3399-rockpro64-android-fstab.dtsi"
 
 / {
 	model = "Pine64 RockPro64";
