@@ -18,6 +18,26 @@
 		stdout-path = "serial2:1500000n8";
 	};
 
+	memory@10000000 {
+        device_type = "memory";
+        /* Full range:      0x00000000 - 0xf7ffffff */
+        /* Reserved for BL: 0x00000000 - 0x0fffffff */
+        /* Linux available: 0x10000000 - 0xE7ffffff */
+        reg = <0x0 0x10000000 0x0 0xE8000000>; /* 3712MB */
+    };
+
+    reserved-memory {
+        #address-cells = <2>;
+        #size-cells = <2>;
+        ranges;
+
+        linux,cma@10000000 {
+            compatible = "shared-dma-pool";
+            reg = <0x0 0x10000000 0x0 0x02000000>; /* 32MB */
+            linux,cma-default;
+        };
+    };
+
 	clkin_gmac: external-gmac-clock {
 		compatible = "fixed-clock";
 		clock-frequency = <125000000>;
