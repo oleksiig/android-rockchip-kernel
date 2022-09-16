@@ -238,6 +238,14 @@
 		power-supply = <&vcc5v0_sys>;
 	};
 
+	fan: pwm-fan {
+		compatible = "pwm-fan";
+		cooling-levels = <0 100 150 200>;
+		#cooling-cells = <2>;
+		fan-supply = <&vcc12v_dcin>;
+		pwms = <&pwm1 0 50000 0>;
+	};
+
 	mipi_panel_avdd: mipi-panel-avdd-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "mipi-panel-avdd";
