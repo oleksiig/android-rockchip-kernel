@@ -1576,7 +1576,7 @@
 		dmas = <&dmac_bus 7>;
 		dma-names = "tx";
 		clock-names = "mclk", "hclk";
-		clocks = <&cru SCLK_SPDIF_8CH>, <&cru HCLK_SPDIF>;
+		clocks = <&cru SCLK_SPDIF>, <&cru HCLK_SPDIF>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&spdif_bus>;
 		power-domains = <&power RK3399_PD_SDIOAUDIO>;
@@ -1592,7 +1592,7 @@
 		dmas = <&dmac_bus 0>, <&dmac_bus 1>;
 		dma-names = "tx", "rx";
 		clock-names = "i2s_clk", "i2s_hclk";
-		clocks = <&cru SCLK_I2S0_8CH>, <&cru HCLK_I2S0_8CH>;
+		clocks = <&cru SCLK_I2S0>, <&cru HCLK_I2S0>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&i2s0_8ch_bus>;
 		power-domains = <&power RK3399_PD_SDIOAUDIO>;
@@ -1607,7 +1607,7 @@
 		dmas = <&dmac_bus 2>, <&dmac_bus 3>;
 		dma-names = "tx", "rx";
 		clock-names = "i2s_clk", "i2s_hclk";
-		clocks = <&cru SCLK_I2S1_8CH>, <&cru HCLK_I2S1_8CH>;
+		clocks = <&cru SCLK_I2S1>, <&cru HCLK_I2S1>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&i2s1_2ch_bus>;
 		power-domains = <&power RK3399_PD_SDIOAUDIO>;
@@ -1622,7 +1622,7 @@
 		dmas = <&dmac_bus 4>, <&dmac_bus 5>;
 		dma-names = "tx", "rx";
 		clock-names = "i2s_clk", "i2s_hclk";
-		clocks = <&cru SCLK_I2S2_8CH>, <&cru HCLK_I2S2_8CH>;
+		clocks = <&cru SCLK_I2S2>, <&cru HCLK_I2S2>;
 		power-domains = <&power RK3399_PD_SDIOAUDIO>;
 		#sound-dai-cells = <0>;
 		status = "disabled";
