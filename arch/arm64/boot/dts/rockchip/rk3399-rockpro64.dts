@@ -642,6 +642,9 @@
 };
 
 &i2s1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2s1_2ch_bus &i2s_mclk>;
+
 	rockchip,playback-channels = <2>;
 	rockchip,capture-channels = <2>;
 	status = "okay";
