@@ -248,7 +248,15 @@ static int feiyang_dsi_probe(struct mipi_dsi_device *dsi)
 	dsi->format = MIPI_DSI_FMT_RGB888;
 	dsi->lanes = 4;
 
-	return mipi_dsi_attach(dsi);
+	ret = mipi_dsi_attach(dsi);
+	if (ret < 0) {
+		drm_panel_remove(&ctx->panel);
+		if(ret != -EPROBE_DEFER)
+			DRM_DEV_ERROR(&dsi->dev, "mipi_dsi_attach failed, err=%d\n",
+				ret);
+	}
+
+	return ret;
 }
 
 static int feiyang_dsi_remove(struct mipi_dsi_device *dsi)
