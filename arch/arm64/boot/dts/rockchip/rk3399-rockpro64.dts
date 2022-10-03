@@ -246,14 +246,6 @@
 		pwms = <&pwm1 0 50000 0>;
 	};
 
-	mipi_panel_avdd: mipi-panel-avdd-regulator {
-		compatible = "regulator-fixed";
-		regulator-name = "mipi-panel-avdd";
-		regulator-min-microvolt = <11000000>;
-		regulator-max-microvolt = <11000000>;
-		vin-supply = <&vcc3v3_s0>;
-	};
-
 	sound_card {
 		compatible = "audio-graph-card";
 		label = "ES8316";
@@ -933,8 +925,6 @@
 	mipi_panel: panel@0 {
 		compatible = "feiyang,fy07024di26a30d";
 		reg = <0>;
-		avdd-supply = <&mipi_panel_avdd>;
-		dvdd-supply = <&vcc3v3_s0>;
 		backlight = <&backlight>;
 
 		ports {
