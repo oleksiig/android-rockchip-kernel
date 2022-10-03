@@ -401,7 +401,7 @@ ap_i2c_audio: &i2c8 {
 		reg = <0x1a>;
 		interrupt-parent = <&gpio1>;
 		interrupts = <23 IRQ_TYPE_LEVEL_LOW>;
-		clocks = <&cru SCLK_I2S_8CH_OUT>;
+		clocks = <&cru SCLK_I2S_CLK_OUT>;
 		clock-names = "mclk";
 		dlg,micbias-lvl = <2600>;
 		dlg,mic-amp-in-sel = "diff";
