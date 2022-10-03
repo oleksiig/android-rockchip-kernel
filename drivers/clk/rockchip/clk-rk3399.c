@@ -583,7 +583,7 @@ static struct rockchip_clk_branch rk3399_clk_branches[] __initdata = {
 			RK3399_CLKSEL_CON(99), 0,
 			RK3399_CLKGATE_CON(8), 14, GFLAGS,
 			&rk3399_spdif_fracmux),
-	GATE(SCLK_SPDIF_8CH, "clk_spdif", "clk_spdif_mux", CLK_SET_RATE_PARENT,
+	GATE(SCLK_SPDIF, "clk_spdif", "clk_spdif_mux", CLK_SET_RATE_PARENT,
 			RK3399_CLKGATE_CON(8), 15, GFLAGS),
 
 	COMPOSITE(SCLK_SPDIF_REC_DPTX, "clk_spdif_rec_dptx", mux_pll_src_cpll_gpll_p, 0,
@@ -597,7 +597,7 @@ static struct rockchip_clk_branch rk3399_clk_branches[] __initdata = {
 			RK3399_CLKSEL_CON(96), 0,
 			RK3399_CLKGATE_CON(8), 4, GFLAGS,
 			&rk3399_i2s0_fracmux),
-	GATE(SCLK_I2S0_8CH, "clk_i2s0", "clk_i2s0_mux", CLK_SET_RATE_PARENT,
+	GATE(SCLK_I2S0, "clk_i2s0", "clk_i2s0_mux", CLK_SET_RATE_PARENT,
 			RK3399_CLKGATE_CON(8), 5, GFLAGS),
 
 	COMPOSITE(0, "clk_i2s1_div", mux_pll_src_cpll_gpll_p, 0,
@@ -607,7 +607,7 @@ static struct rockchip_clk_branch rk3399_clk_branches[] __initdata = {
 			RK3399_CLKSEL_CON(97), 0,
 			RK3399_CLKGATE_CON(8), 7, GFLAGS,
 			&rk3399_i2s1_fracmux),
-	GATE(SCLK_I2S1_8CH, "clk_i2s1", "clk_i2s1_mux", CLK_SET_RATE_PARENT,
+	GATE(SCLK_I2S1, "clk_i2s1", "clk_i2s1_mux", CLK_SET_RATE_PARENT,
 			RK3399_CLKGATE_CON(8), 8, GFLAGS),
 
 	COMPOSITE(0, "clk_i2s2_div", mux_pll_src_cpll_gpll_p, 0,
@@ -617,12 +617,12 @@ static struct rockchip_clk_branch rk3399_clk_branches[] __initdata = {
 			RK3399_CLKSEL_CON(98), 0,
 			RK3399_CLKGATE_CON(8), 10, GFLAGS,
 			&rk3399_i2s2_fracmux),
-	GATE(SCLK_I2S2_8CH, "clk_i2s2", "clk_i2s2_mux", CLK_SET_RATE_PARENT,
+	GATE(SCLK_I2S2, "clk_i2s2", "clk_i2s2_mux", CLK_SET_RATE_PARENT,
 			RK3399_CLKGATE_CON(8), 11, GFLAGS),
 
 	MUX(0, "clk_i2sout_src", mux_i2sch_p, CLK_SET_RATE_PARENT,
 			RK3399_CLKSEL_CON(31), 0, 2, MFLAGS),
-	COMPOSITE_NODIV(SCLK_I2S_8CH_OUT, "clk_i2sout", mux_i2sout_p, CLK_SET_RATE_PARENT,
+	COMPOSITE_NODIV(SCLK_I2S_CLK_OUT, "clk_i2sout", mux_i2sout_p, CLK_SET_RATE_PARENT,
 			RK3399_CLKSEL_CON(31), 2, 1, MFLAGS,
 			RK3399_CLKGATE_CON(8), 12, GFLAGS),
 
@@ -1015,9 +1015,9 @@ static struct rockchip_clk_branch rk3399_clk_branches[] __initdata = {
 	/* hclk_perilp1 gates */
 	GATE(0, "hclk_perilp1_noc", "hclk_perilp1", CLK_IGNORE_UNUSED, RK3399_CLKGATE_CON(25), 9, GFLAGS),
 	GATE(0, "hclk_sdio_noc", "hclk_perilp1", CLK_IGNORE_UNUSED, RK3399_CLKGATE_CON(25), 12, GFLAGS),
-	GATE(HCLK_I2S0_8CH, "hclk_i2s0", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 0, GFLAGS),
-	GATE(HCLK_I2S1_8CH, "hclk_i2s1", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 1, GFLAGS),
-	GATE(HCLK_I2S2_8CH, "hclk_i2s2", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 2, GFLAGS),
+	GATE(HCLK_I2S0, "hclk_i2s0", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 0, GFLAGS),
+	GATE(HCLK_I2S1, "hclk_i2s1", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 1, GFLAGS),
+	GATE(HCLK_I2S2, "hclk_i2s2", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 2, GFLAGS),
 	GATE(HCLK_SPDIF, "hclk_spdif", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 3, GFLAGS),
 	GATE(HCLK_SDIO, "hclk_sdio", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 4, GFLAGS),
 	GATE(PCLK_SPI5, "pclk_spi5", "hclk_perilp1", 0, RK3399_CLKGATE_CON(34), 5, GFLAGS),
