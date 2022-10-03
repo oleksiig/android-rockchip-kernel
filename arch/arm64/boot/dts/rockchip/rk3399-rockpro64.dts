@@ -627,6 +627,11 @@
 
 		AVDD28-supply = <&vcc3v0_touch>;
 		VDDIO-supply = <&vcc3v0_touch>;
+
+		touchscreen-size-x = <1024>;
+		touchscreen-size-y = <600>;
+		touchscreen-inverted-x = <1>;
+		touchscreen-inverted-y = <1>;
 	};
 };
 
