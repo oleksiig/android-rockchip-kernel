@@ -54,19 +54,23 @@ static int feiyang_prepare(struct drm_panel *panel)
 	unsigned int i;
 	int ret;
 
-	ret = regulator_enable(ctx->dvdd);
-	if (ret)
-		return ret;
+	if(ctx->dvdd) {
+		ret = regulator_enable(ctx->dvdd);
+		if (ret)
+			return ret;
 
-	/* T1 (dvdd start + dvdd rise) 0 < T1 <= 10ms */
-	msleep(10);
+		/* T1 (dvdd start + dvdd rise) 0 < T1 <= 10ms */
+		msleep(10);
+	}
 
-	ret = regulator_enable(ctx->avdd);
-	if (ret)
-		return ret;
+	if(ctx->avdd) {
+		ret = regulator_enable(ctx->avdd);
+		if (ret)
+			return ret;
 
-	/* T3 (dvdd rise + avdd start + avdd rise) T3 >= 20ms */
-	msleep(20);
+		/* T3 (dvdd rise + avdd start + avdd rise) T3 >= 20ms */
+		msleep(20);
+	}
 
 	if(ctx->reset) {
 		gpiod_set_value(ctx->reset, 0);
@@ -138,12 +142,15 @@ static int feiyang_unprepare(struct drm_panel *panel)
 	if(ctx->reset)
 		gpiod_set_value(ctx->reset, 0);
 
-	regulator_disable(ctx->avdd);
+	if(ctx->avdd) {
+		regulator_disable(ctx->avdd);
 
-	/* T11 (dvdd rise to fall) 0 < T11 <= 10ms  */
-	msleep(10);
+		/* T11 (dvdd rise to fall) 0 < T11 <= 10ms  */
+		msleep(10);
+	}
 
-	regulator_disable(ctx->dvdd);
+	if(ctx->dvdd)
+		regulator_disable(ctx->dvdd);
 
 	return 0;
 }
@@ -211,16 +218,16 @@ static int feiyang_dsi_probe(struct mipi_dsi_device *dsi)
 	ctx->panel.dev = &dsi->dev;
 	ctx->panel.funcs = &feiyang_funcs;
 
-	ctx->dvdd = devm_regulator_get(&dsi->dev, "dvdd");
+	ctx->dvdd = devm_regulator_get_optional(&dsi->dev, "dvdd");
 	if (IS_ERR(ctx->dvdd)) {
 		DRM_DEV_ERROR(&dsi->dev, "Couldn't get dvdd regulator\n");
-		return PTR_ERR(ctx->dvdd);
+		ctx->dvdd = NULL;
 	}
 
-	ctx->avdd = devm_regulator_get(&dsi->dev, "avdd");
+	ctx->avdd = devm_regulator_get_optional(&dsi->dev, "avdd");
 	if (IS_ERR(ctx->avdd)) {
 		DRM_DEV_ERROR(&dsi->dev, "Couldn't get avdd regulator\n");
-		return PTR_ERR(ctx->avdd);
+		ctx->avdd = NULL;
 	}
 
 	ctx->reset = devm_gpiod_get_optional(&dsi->dev, "reset", GPIOD_OUT_LOW);
