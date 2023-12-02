@@ -7,6 +7,7 @@
 
 /dts-v1/;
 #include "rk3399-rockpro64.dtsi"
+#include "rk3399-android-fstab.dtsi"
 
 / {
 	model = "Pine64 RockPro64 v2.0";
